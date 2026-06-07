@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>古诗词默写题库</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 20px 20px 200px 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; color: white; margin-bottom: 30px; }
+        .header h1 { font-size: 2.5em; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
+        .header p { opacity: 0.9; }
+        .sync-bar { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 10px; }
+        .sync-bar select { padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 0.9em; cursor: pointer; }
+        .btn-sync { padding: 6px 14px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.15); color: white; font-size: 0.85em; cursor: pointer; transition: all 0.2s; }
+        .btn-sync:hover { background: rgba(255,255,255,0.25); }
+        .sync-status { font-size: 0.8em; color: rgba(255,255,255,0.8); }
+        .card { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.15); }
+        .stats-bar { display: flex; justify-content: space-around; text-align: center; }
+        .stat-item { padding: 10px; }
+        .stat-value { font-size: 2em; font-weight: bold; color: #667eea; }
+        .stat-label { color: #666; font-size: 0.9em; margin-top: 5px; }
+        .filter-section { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+        .filter-section select { flex: 1; min-width: 120px; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 0.95em; background: white; cursor: pointer; transition: all 0.2s; }
+        .filter-section select:focus { outline: none; border-color: #667eea; }
+        .specific-row select { flex: none; width: 100%; padding: 12px 16px; font-size: 1em; border-width: 2px; border-color: #667eea; }
+        .mode-toggle { display: flex; justify-content: center; gap: 12px; margin-bottom: 24px; padding-top: 8px; }
+        .mode-btn { padding: 10px 24px; border: 1px solid #d0d0d0; background: white; color: #555; border-radius: 20px; cursor: pointer; transition: all 0.2s; font-size: 0.95em; }
+        .mode-btn:hover { border-color: #667eea; color: #667eea; }
+        .mode-btn.active { background: #667eea; color: white; border-color: #667eea; }
+        .quiz-area { text-align: center; }
+        .poem-info { color: #666; margin-bottom: 20px; font-size: 0.95em; }
+        .poem-info span { background: #f0f0f0; padding: 4px 12px; border-radius: 20px; margin: 0 5px; }
+        .question { font-size: 1.4em; color: #333; margin: 30px 0; line-height: 1.8; min-height: 60px; display: flex; align-items: center; justify-content: center; }
+        .question .hint { color: #667eea; font-size: 0.8em; font-weight: 600; margin-top: 10px; padding: 6px 16px; background: #f0f4ff; border-radius: 20px; display: inline-block; }
+        .input-area { margin: 20px 0; }
+        .input-area input { width: 100%; max-width: 500px; padding: 16px; font-size: 1.2em; border: 2px solid #e0e0e0; border-radius: 12px; text-align: center; transition: all 0.3s; }
+        .input-area input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.2); }
+        .input-area input.correct { border-color: #4caf50; background: #e8f5e9; }
+        .input-area input.wrong { border-color: #f44336; background: #ffebee; }
+        .btn { padding: 14px 36px; font-size: 1.1em; border: none; border-radius: 10px; cursor: pointer; transition: all 0.2s; font-weight: 500; }
+        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
+        .btn-secondary { background: #f0f0f0; color: #333; margin-left: 10px; }
+        .btn-secondary:hover { background: #e0e0e0; }
+        .btn-show-answer { background: #fff3e0; color: #e65100; border: 2px solid #ffcc80; }
+        .btn-show-answer:hover { background: #ffe0b2; }
+        .btn-danger { background: #ff5252; color: white; }
+        .btn-small { padding: 8px 16px; font-size: 0.9em; }
+        .feedback { margin: 20px 0; padding: 16px; border-radius: 10px; display: none; }
+        .feedback.show { display: block; }
+        .feedback.correct { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+        .feedback.wrong { background: #ffebee; color: #c62828; border: 1px solid #ef9a9a; }
+        .feedback .correct-answer { font-weight: bold; margin-top: 8px; font-size: 1.1em; }
+        .mode-toggle { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .mode-btn { padding: 10px 20px; border: 2px solid #667eea; background: white; color: #667eea; border-radius: 25px; cursor: pointer; transition: all 0.2s; }
+        .mode-btn.active { background: #667eea; color: white; }
+        .mode-btn:hover { transform: scale(1.05); }
+        .progress-bar { width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; margin: 20px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #4caf50, #8bc34a); transition: width 0.3s; }
+        .poem-list { max-height: 500px; overflow-y: auto; }
+        .poem-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f0f0f0; }
+        .poem-item:hover { background: #f8f9fa; }
+        .poem-item .status { width: 12px; height: 12px; border-radius: 50%; margin-right: 12px; }
+        .poem-item .status.mastered { background: #4caf50; }
+        .poem-item .status.learning { background: #ff9800; }
+        .poem-item .status.new { background: #e0e0e0; }
+        .poem-item .info { flex: 1; }
+        .poem-item .title { font-weight: 500; }
+        .poem-item .author { color: #666; font-size: 0.9em; }
+        .tabs { display: flex; border-bottom: 2px solid #f0f0f0; margin-bottom: 20px; }
+        .tab { padding: 12px 24px; cursor: pointer; color: #666; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; }
+        .tab.active { color: #667eea; border-bottom-color: #667eea; }
+        .tab:hover { color: #667eea; }
+        .error-book { max-height: 500px; overflow-y: auto; }
+        .error-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #fff3e0; border-radius: 8px; margin-bottom: 8px; }
+        .error-item .poem-title { font-weight: 500; color: #e65100; }
+        .error-item .line { color: #333; margin-top: 4px; }
+        .empty-state { text-align: center; padding: 40px; color: #999; }
+        .keyboard-hint { font-size: 0.85em; color: #999; margin-top: 10px; }
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 20px; }
+        .modal-overlay.show { display: flex; }
+        .modal-content { background: white; border-radius: 16px; padding: 30px 40px; max-width: 600px; width: 100%; max-height: 80vh; overflow-y: auto; position: relative; display: flex; flex-direction: column; align-items: center; }
+        .modal-close { position: absolute; top: 12px; right: 12px; background: #f0f0f0; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #666; }
+        .modal-close:hover { background: #e0e0e0; }
+        .modal-title { font-size: 1.5em; font-weight: 600; color: #333; margin-bottom: 8px; letter-spacing: 2px; text-align: center; }
+        .modal-author { color: #888; margin-bottom: 28px; font-size: 0.95em; text-align: center; }
+        .modal-text { line-height: 2.4; color: #333; white-space: pre-wrap; font-size: 1.15em; letter-spacing: 2px; text-align: center; max-width: 500px; width: 100%; }
+        .view-raw-modal { background: none; border: 1px solid #667eea; color: #667eea; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 0.85em; margin-left: 10px; }
+        .view-raw-modal:hover { background: #f0f4ff; }
+        body.dark-mode .modal-content { background: #222240; }
+        body.dark-mode .modal-close { background: #3a3a5a; color: #ccc; }
+        body.dark-mode .modal-title { color: #e8e8f0; }
+        body.dark-mode .modal-author { color: #9090a8; }
+        body.dark-mode .modal-text { color: #d0d0e0; line-height: 2.6; }
+        body.dark-mode .view-raw-modal { border-color: #7080c0; color: #a0b0ff; }
+        body.dark-mode .view-raw-modal:hover { background: #2a2a4a; }
+        body.both-mode .modal-content { background: #2a2620; }
+        body.both-mode .modal-close { background: #3a3525; color: #d4c9a8; }
+        body.both-mode .modal-title { color: #d4c9a8; font-size: 1.6em; }
+        body.both-mode .modal-author { color: #a89a7a; }
+        body.both-mode .modal-text { color: #d4c9a8; line-height: 2.6; letter-spacing: 3px; }
+        body.both-mode .view-raw-modal { border-color: #8b7355; color: #c9b87a; }
+        body.both-mode .view-raw-modal:hover { background: #333020; }
+        .error-type-select { display: none; margin: 20px 0; }
+        .error-type-select.show { display: block; }
+        .error-type-select p { margin-bottom: 12px; color: #666; }
+        .error-type-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+        .error-type-btn { padding: 10px 20px; border: 2px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .error-type-btn:hover { border-color: #667eea; color: #667eea; }
+        .error-type-btn.selected { background: #667eea; color: white; border-color: #667eea; }
+        .error-type-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 8px; }
+        .error-type-tag.forgot { background: #ffebee; color: #c62828; }
+        .error-type-tag.typo { background: #fff3e0; color: #e65100; }
+        .error-type-tag.cantwrite { background: #e3f2fd; color: #1565c0; }
+        .char-mark { display: inline-block; cursor: pointer; padding: 0 2px; border-radius: 3px; transition: all 0.15s; }
+        .char-mark:hover { background: #fff3e0; }
+        .char-mark.marked { background: #ffcdd2; color: #c62828; font-weight: 600; text-decoration: underline; }
+        .marked-chars { margin-top: 8px; font-size: 0.9em; color: #888; display: none; }
+        .marked-chars span { color: #c62828; font-weight: 500; }
+        body.dark-mode .char-mark:hover { background: #3a3028; }
+        body.dark-mode .char-mark.marked { background: #5a2020; color: #ff8a80; }
+        body.both-mode .char-mark:hover { background: #3a3020; }
+        body.both-mode .char-mark.marked { background: #5a2820; color: #d48060; }
+        .poem-raw { display: none; margin-top: 8px; padding: 12px; background: #f8f9fa; border-radius: 8px; line-height: 1.8; color: #333; font-size: 0.95em; }
+        .poem-raw.show { display: block; }
+        .view-raw-btn { background: none; border: none; color: #667eea; cursor: pointer; font-size: 0.85em; padding: 4px 8px; }
+        .view-raw-btn:hover { text-decoration: underline; }
+        .specific-poem-select { width: 100%; margin-bottom: 12px; }
+        .poems-view { display: flex; gap: 20px; }
+        .poems-sidebar { width: 220px; flex-shrink: 0; border-right: 1px solid #e0e0e0; padding-right: 16px; max-height: 500px; overflow-y: auto; }
+        .poems-sidebar .sidebar-group { margin-bottom: 16px; }
+        .poems-sidebar .sidebar-title { font-weight: 600; color: #333; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #eee; }
+        .poems-sidebar .sidebar-item { padding: 6px 8px; cursor: pointer; border-radius: 4px; font-size: 0.9em; color: #555; transition: all 0.15s; }
+        .poems-sidebar .sidebar-item:hover { background: #f0f0f0; color: #333; }
+        .poems-sidebar .sidebar-item.active { background: #667eea; color: white; }
+        .poems-content { flex: 1; padding: 20px 30px; display: flex; flex-direction: column; align-items: center; }
+        .poems-content .poem-full { text-align: center; max-width: 500px; width: 100%; padding: 20px; }
+        .poems-content .poem-full-title { font-size: 1.5em; font-weight: 600; color: #333; margin-bottom: 8px; letter-spacing: 2px; }
+        .poems-content .poem-full-author { color: #888; margin-bottom: 28px; font-size: 0.95em; }
+        .poems-content .poem-full-text { line-height: 2.4; color: #333; white-space: pre-wrap; font-size: 1.15em; letter-spacing: 2px; }
+        body.dark-mode .poems-sidebar { border-color: #3a3a5a; }
+        body.dark-mode .poems-sidebar .sidebar-title { color: #e8e8f0; border-color: #3a3a5a; }
+        body.dark-mode .poems-sidebar .sidebar-item { color: #b0b0c0; }
+        body.dark-mode .poems-sidebar .sidebar-item:hover { background: #2a2a4a; color: #e8e8f0; }
+        body.dark-mode .poems-sidebar .sidebar-item.active { background: #5060a0; color: #fff; }
+        @media (max-width: 768px) {
+            body.dark-mode .poems-sidebar { border-color: #3a3a5a; }
+            body.dark-mode .poems-content { background: transparent; }
+        }
+        body.dark-mode .poems-sidebar .sidebar-item { color: #b0b0c0; }
+        body.dark-mode .poems-sidebar .sidebar-item:hover { background: #2a2a4a; color: #e8e8f0; }
+        body.dark-mode .poems-content .poem-full-title { color: #e8e8f0; }
+        body.dark-mode .poems-content .poem-full-author { color: #9090a8; }
+        body.dark-mode .poems-content .poem-full-text { color: #d0d0e0; line-height: 2.6; }
+        body.both-mode .poems-sidebar { border-color: #3a3525; }
+        body.both-mode .poems-sidebar .sidebar-title { color: #d4c9a8; border-color: #3a3525; }
+        body.both-mode .poems-sidebar .sidebar-item { color: #a89a7a; }
+        body.both-mode .poems-sidebar .sidebar-item:hover { background: #333020; color: #d4c9a8; }
+        body.both-mode .poems-sidebar .sidebar-item.active { background: #8b7355; color: #f5f0e1; }
+        body.both-mode .poems-content .poem-full-title { color: #d4c9a8; font-size: 1.6em; }
+        body.both-mode .poems-content .poem-full-author { color: #a89a7a; }
+        body.both-mode .poems-content .poem-full-text { color: #d4c9a8; line-height: 2.6; letter-spacing: 3px; }
+        body.eye-care-mode .poems-sidebar { border-color: #d4c9b5; }
+        body.eye-care-mode .poems-sidebar .sidebar-title { color: #5d4e37; border-color: #d4c9b5; }
+        body.eye-care-mode .poems-sidebar .sidebar-item { color: #7a6b5a; }
+        body.eye-care-mode .poems-sidebar .sidebar-item:hover { background: #f0ebe0; color: #5d4e37; }
+        body.eye-care-mode .poems-sidebar .sidebar-item.active { background: #8b7355; color: #fff; }
+
+        /* 滚动条样式 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c0c0c0; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a0a0a0; }
+        body.dark-mode ::-webkit-scrollbar-thumb { background: #4a4a6a; }
+        body.dark-mode ::-webkit-scrollbar-thumb:hover { background: #5a5a7a; }
+        body.both-mode ::-webkit-scrollbar-thumb { background: #4a4230; }
+        body.both-mode ::-webkit-scrollbar-thumb:hover { background: #5a5240; }
+        body.eye-care-mode ::-webkit-scrollbar-thumb { background: #c9b89a; }
+        body.eye-care-mode ::-webkit-scrollbar-thumb:hover { background: #b8a888; }
+        body.dark-mode .poem-raw { background: #2a2a3e; color: #ccc; }
+        body.dark-mode .line-context .arrow { color: #9090a8; }
+        body.eye-care-mode .poem-raw { background: #f0ebe0; color: #5d4e37; }
+        body.both-mode .poem-raw { background: #333020; color: #b8aa88; }
+        .line-context { margin-top: 6px; font-size: 1.05em; }
+        .line-context .context { color: #666; }
+        .line-context .answer { color: #c62828; font-weight: 500; }
+        .line-context .arrow { color: #999; font-size: 1.2em; }
+        .answer-masked { background: #e0e0e0; color: #e0e0e0; padding: 2px 8px; border-radius: 4px; cursor: pointer; user-select: none; transition: all 0.2s; }
+        .answer-masked:hover { background: #d0d0d0; }
+        .answer-masked.revealed { background: transparent; color: #c62828; font-weight: 500; cursor: default; }
+        .theme-toggle { position: fixed; top: 10px; right: 10px; display: flex; gap: 6px; z-index: 100; }
+        .theme-btn { width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); cursor: pointer; transition: transform 0.2s, border-color 0.2s; }
+        .theme-btn:hover { transform: scale(1.1); border-color: rgba(255,255,255,0.6); }
+        .theme-btn.light { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .theme-btn.dark { background: linear-gradient(135deg, #1a1a2e, #16213e); }
+        .theme-btn.eye-care { background: linear-gradient(135deg, #c9d6a3, #a8c97f); }
+        .theme-btn.both { background: linear-gradient(135deg, #2d2a1e, #3d3828); }
+
+        /* 护眼暗夜模式（融合） */
+        body.both-mode { background: linear-gradient(135deg, #1a1812, #252117); min-height: 100vh; }
+        body.both-mode .card { background: #2a2620; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+        body.both-mode .header h1 { color: #d4c9a8; }
+        body.both-mode .header p { color: #a89a7a; }
+        body.both-mode .stat-value { color: #c9b87a; }
+        body.both-mode .stat-label { color: #8a7d60; }
+        body.both-mode .filter-section select { background: #2a2620; color: #d4c9a8; border-color: #4a4230; color-scheme: dark; }
+        body.both-mode .filter-section select option { background: #2a2620; color: #d4c9a8; }
+        body.both-mode .specific-row select { background: #252117; border-color: #8b7355; color-scheme: dark; }
+        body.both-mode .mode-btn { background: #2a2620; color: #d4c9a8; border-color: #4a4230; }
+        body.both-mode .mode-btn:hover { border-color: #a89060; color: #d4c9a8; }
+        body.both-mode .mode-btn.active { background: #8b7355; color: #f5f0e1; border-color: #8b7355; }
+        body.both-mode .question { color: #d4c9a8; }
+        body.both-mode .question .hint { color: #c9b87a; background: #333020; }
+        body.both-mode .input-area input { background: #2a2620; color: #d4c9a8; border-color: #4a4230; }
+        body.both-mode .input-area input:focus { border-color: #8b7355; box-shadow: 0 0 0 3px rgba(139,115,85,0.3); }
+        body.both-mode .poem-info span { background: #333020; color: #a89a7a; }
+        body.both-mode .tab { color: #8a7d60; }
+        body.both-mode .tab.active { color: #c9b87a; border-bottom-color: #c9b87a; }
+        body.both-mode .tabs { border-color: #3a3525; }
+        body.both-mode .btn-secondary { background: #333020; color: #d4c9a8; }
+        body.both-mode .btn-secondary:hover { background: #3d3828; }
+        body.both-mode .error-item { background: #333020; }
+        body.both-mode .error-item .poem-title { color: #c9a86c; }
+        body.both-mode .error-item .line { color: #b8aa88; }
+        body.both-mode .empty-state { color: #6a6050; }
+        body.both-mode .keyboard-hint { color: #6a6050; }
+        body.both-mode .line-context .context { color: #c9b87a; }
+        body.both-mode .line-context .answer { color: #e8c060; font-weight: 500; }
+        body.both-mode .line-context .arrow { color: #c9b87a; }
+        body.both-mode .answer-masked { background: #4a4230; color: #4a4230; }
+        body.both-mode .answer-masked:hover { background: #5a5240; }
+        body.both-mode .answer-masked.revealed { background: transparent; color: #d4a050; }
+        body.both-mode .error-type-tag { border-color: #4a4230; }
+        body.both-mode .error-type-tag.forgot { background: #3a2820; color: #d48060; }
+        body.both-mode .error-type-tag.typo { background: #3a3020; color: #d4a050; }
+        body.both-mode .error-type-tag.cantwrite { background: #283030; color: #7ab8b0; }
+        body.both-mode .error-type-btn { border-color: #4a4230; color: #d4c9a8; }
+        body.both-mode .error-type-btn:hover { border-color: #8b7355; }
+        body.both-mode .error-type-btn.selected { background: #8b7355; color: #f5f0e1; border-color: #8b7355; }
+        body.both-mode .feedback.correct { background: #2a3020; color: #8ab870; border-color: #4a6030; }
+        body.both-mode .feedback.wrong { background: #3a2820; color: #d48060; border-color: #6a4030; }
+        body.both-mode .error-type-select p { color: #a89a7a; }
+        body.both-mode .error-type-btn { background: #333020; color: #d4c9a8; border-color: #4a4230; }
+        body.both-mode .error-type-btn:hover { background: #3d3828; border-color: #8b7355; }
+        body.both-mode .error-type-btn.selected { background: #8b7355; color: #f5f0e1; border-color: #8b7355; }
+        body.both-mode .poem-item { border-color: #3a3525; }
+        body.both-mode .poem-item:hover { background: #333020; }
+        body.both-mode .poem-item .title { color: #d4c9a8; }
+        body.both-mode .poem-item .author { color: #8a7d60; }
+
+        /* 暗夜模式 */
+        body.dark-mode { background: #1a1a2e; min-height: 100vh; }
+        body.dark-mode .card { background: #222240; box-shadow: none; }
+        body.dark-mode .header h1 { color: #e8e8f0; }
+        body.dark-mode .header p { color: #b0b0c0; }
+        body.dark-mode .stat-value { color: #a0b0ff; }
+        body.dark-mode .stat-label { color: #9090a8; }
+        body.dark-mode .filter-section select { background: #2a2a4a; color: #e8e8f0; border-color: #4a4a6a; color-scheme: dark; }
+        body.dark-mode .filter-section select option { background: #2a2a4a; color: #e8e8f0; }
+        body.dark-mode .specific-row select { background: #222240; border-color: #6070b0; color-scheme: dark; }
+        body.dark-mode .mode-btn { background: #2a2a4a; color: #e8e8f0; border-color: #4a4a6a; }
+        body.dark-mode .mode-btn:hover { border-color: #7080c0; color: #a0b0ff; }
+        body.dark-mode .mode-btn.active { background: #5060a0; color: #fff; border-color: #5060a0; }
+        body.dark-mode .question { color: #e8e8f0; }
+        body.dark-mode .question .hint { color: #a0b0ff; background: #2a2a4a; }
+        body.dark-mode .input-area input { background: #2a2a4a; color: #e8e8f0; border-color: #4a4a6a; }
+        body.dark-mode .input-area input:focus { border-color: #7080c0; }
+        body.dark-mode .poem-info span { background: #2a2a4a; color: #b0b0c0; }
+        body.dark-mode .poem-item { border-color: #3a3a5a; }
+        body.dark-mode .poem-item:hover { background: #2a2a4a; }
+        body.dark-mode .poem-item .author { color: #9090a8; }
+        body.dark-mode .tab { color: #9090a8; }
+        body.dark-mode .tab.active { color: #a0b0ff; border-bottom-color: #a0b0ff; }
+        body.dark-mode .tabs { border-color: #3a3a5a; }
+        body.dark-mode .error-item { background: #2a2a4a; }
+        body.dark-mode .error-item .poem-title { color: #e0b060; }
+        body.dark-mode .error-item .line { color: #d0d0e0; }
+        body.dark-mode .btn-secondary { background: #2a2a4a; color: #e8e8f0; }
+        body.dark-mode .empty-state { color: #707088; }
+        body.dark-mode .keyboard-hint { color: #707088; }
+        body.dark-mode .line-context .context { color: #9090a8; }
+        body.dark-mode .answer-masked { background: #3a3a5a; color: #3a3a5a; }
+        body.dark-mode .answer-masked:hover { background: #4a4a6a; }
+        body.dark-mode .answer-masked.revealed { background: transparent; color: #e0a040; }
+        body.dark-mode .poem-raw { background: #2a2a4a; color: #d0d0e0; }
+        body.dark-mode .view-raw-btn { color: #a0b0ff; }
+        body.dark-mode .error-type-tag { border-color: #4a4a6a; }
+        body.dark-mode .error-type-tag.forgot { background: #3a2828; color: #e08080; }
+        body.dark-mode .error-type-tag.typo { background: #3a3028; color: #e0b060; }
+        body.dark-mode .error-type-tag.cantwrite { background: #283038; color: #80c0c0; }
+        body.dark-mode .error-type-btn { border-color: #4a4a6a; color: #e8e8f0; }
+        body.dark-mode .error-type-btn:hover { border-color: #7080c0; }
+        body.dark-mode .error-type-btn.selected { background: #5060a0; color: #fff; border-color: #5060a0; }
+        body.dark-mode .feedback.correct { background: #283828; color: #90d090; border-color: #385038; }
+        body.dark-mode .feedback.wrong { background: #382828; color: #e08080; border-color: #503030; }
+        body.dark-mode .btn-primary { background: #5060a0; }
+        body.dark-mode .btn-primary:hover { box-shadow: none; }
+
+        /* 护眼模式 */
+        body.eye-care-mode { background: linear-gradient(135deg, #f5f0e1, #e8e4d4); }
+        body.eye-care-mode .card { background: #faf7f0; }
+        body.eye-care-mode .header h1 { color: #5d4e37; }
+        body.eye-care-mode .header p { color: #7a6b5a; }
+        body.eye-care-mode .stat-value { color: #8b7355; }
+        body.eye-care-mode .filter-section select { background: #f5f0e1; border-color: #d4c9b5; }
+        body.eye-care-mode .mode-btn { background: #f5f0e1; color: #5d4e37; border-color: #d4c9b5; }
+        body.eye-care-mode .mode-btn.active { background: #8b7355; color: white; }
+        body.eye-care-mode .question { color: #5d4e37; }
+        body.eye-care-mode .input-area input { background: #f5f0e1; border-color: #d4c9b5; }
+        body.eye-care-mode .poem-info span { background: #f0ebe0; color: #7a6b5a; }
+        body.eye-care-mode .tab { color: #7a6b5a; }
+        body.eye-care-mode .tab.active { color: #8b7355; border-bottom-color: #8b7355; }
+        body.eye-care-mode .tabs { border-color: #d4c9b5; }
+        body.eye-care-mode .btn-secondary { background: #f0ebe0; color: #5d4e37; }
+        body.eye-care-mode .error-item { background: #f5f0e1; }
+        body.eye-care-mode .error-item .poem-title { color: #8b5a2b; }
+        @media (max-width: 768px) {
+            body { padding: 10px 10px 100px 10px; }
+            .header h1 { font-size: 1.4em; margin-top: 45px; }
+            .header p { font-size: 0.8em; }
+            .sync-bar { flex-wrap: wrap; justify-content: center; gap: 6px; }
+            .sync-bar select { padding: 5px 10px; font-size: 0.85em; }
+            .btn-sync { padding: 5px 12px; font-size: 0.8em; }
+            .container { padding: 0; }
+            .card { padding: 12px; margin-bottom: 8px; border-radius: 10px; }
+            .stats-bar { flex-wrap: wrap; gap: 6px; }
+            .stat-item { flex: 1; min-width: 45%; padding: 6px; }
+            .stat-value { font-size: 1.4em; }
+            .stat-label { font-size: 0.8em; }
+            .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+            .tabs::-webkit-scrollbar { display: none; }
+            .tab { padding: 10px 14px; font-size: 0.9em; white-space: nowrap; }
+            .filter-section { gap: 8px; margin-bottom: 12px; }
+            .filter-section select { min-width: 0; padding: 10px 12px; font-size: 0.85em; }
+            .specific-row select { padding: 11px 14px; }
+            .mode-toggle { gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 16px; }
+            .mode-btn { padding: 9px 16px; font-size: 0.85em; }
+            .question { font-size: 1.1em; min-height: 50px; margin: 20px 0; }
+            .input-area input { font-size: 1em; padding: 14px; }
+            .btn { padding: 11px 20px; font-size: 0.95em; }
+            .poem-info { font-size: 0.75em; flex-wrap: wrap; justify-content: center; }
+            .poem-info span { padding: 3px 6px; margin: 0 2px; }
+            .poems-view { flex-direction: column; gap: 12px; }
+            .poems-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e0e0e0; padding-right: 0; padding-bottom: 10px; max-height: 200px; overflow-y: auto; }
+            .poems-content { padding: 16px 12px; }
+            .poems-content .poem-full-text { font-size: 1em; line-height: 2.2; }
+            .error-item { flex-direction: column; align-items: flex-start; gap: 8px; }
+            .error-item .btn-danger { align-self: flex-end; }
+            .theme-toggle { top: 8px; right: 8px; gap: 5px; }
+            .theme-btn { width: 28px; height: 28px; }
+            .error-type-select p { font-size: 0.9em; }
+            .error-type-btns { gap: 8px; }
+            .error-type-btn { padding: 8px 14px; font-size: 0.85em; }
+            .modal-content { padding: 24px 20px; max-width: 92vw; max-height: 75vh; }
+            .modal-close { top: 8px; right: 8px; width: 28px; height: 28px; font-size: 16px; }
+            .modal-title { font-size: 1.2em; }
+            .modal-author { margin-bottom: 20px; }
+            .modal-text { font-size: 0.95em; line-height: 2.2; letter-spacing: 1px; white-space: pre-wrap; word-break: break-all; }
+        }
+        @media (max-width: 480px) {
+            body { padding: 8px 8px 80px 8px; }
+            .header h1 { font-size: 1.3em; }
+            .stat-item { min-width: 40%; }
+            .tab { padding: 8px 12px; font-size: 0.85em; }
+            .mode-btn { padding: 8px 14px; font-size: 0.8em; }
+            .poems-sidebar .sidebar-item { font-size: 0.85em; padding: 5px 6px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle">
+        <button class="theme-btn light" onclick="setTheme('light')" title="亮色模式"></button>
+        <button class="theme-btn dark" onclick="setTheme('dark')" title="暗夜模式"></button>
+        <button class="theme-btn eye-care" onclick="setTheme('eye-care')" title="护眼模式"></button>
+        <button class="theme-btn both" onclick="setTheme('both')" title="护眼暗夜"></button>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1>古诗词默写题库</h1>
+            <div class="sync-bar">
+                <select id="user-select">
+                    <option value="Y">Y</option>
+                    <option value="test">测试</option>
+                </select>
+                <button class="btn-sync" onclick="syncData()" title="同步到云端">同步</button>
+                <span class="sync-status" id="sync-status"></span>
+            </div>
+            <p>共 <span id="total-count">0</span> 首诗词，随机出题，巩固记忆</p>
+        </div>
+
+        <div class="card">
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-value" id="mastered-count">0</div>
+                    <div class="stat-label">已掌握</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="learning-count">0</div>
+                    <div class="stat-label">学习中</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="accuracy">0%</div>
+                    <div class="stat-label">正确率</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="error-count">0</div>
+                    <div class="stat-label">错题</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <div class="tab active" data-tab="practice">默写练习</div>
+                <div class="tab" data-tab="poems">诗词原文</div>
+                <div class="tab" data-tab="list">学习进度</div>
+                <div class="tab" data-tab="errors">错题本</div>
+            </div>
+
+            <div id="tab-poems" class="tab-content" style="display:none;">
+                <div class="poems-view">
+                    <div class="poems-sidebar" id="poems-sidebar"></div>
+                    <div class="poems-content" id="poems-content">
+                        <div class="empty-state">← 点击左侧目录查看原文</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-practice" class="tab-content">
+                <div class="filter-section specific-row">
+                    <select id="filter-specific">
+                        <option value="all">指定篇目（可选）</option>
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <select id="filter-type">
+                        <option value="all">全部类型</option>
+                        <option value="诗">诗</option>
+                        <option value="词">词</option>
+                    </select>
+                    <select id="filter-author">
+                        <option value="all">全部作者</option>
+                    </select>
+                    <select id="filter-status">
+                        <option value="all">全部状态</option>
+                        <option value="new">未学习</option>
+                        <option value="learning">学习中</option>
+                        <option value="mastered">已掌握</option>
+                    </select>
+                </div>
+
+                <div class="mode-toggle">
+                    <button class="mode-btn active" data-mode="random">随机出题</button>
+                    <button class="mode-btn" data-mode="sequential">顺序出题</button>
+                    <button class="mode-btn" data-mode="errors">错题复习</button>
+                </div>
+
+                <div class="quiz-area">
+                    <div class="poem-info" id="poem-info"></div>
+                    <div class="question" id="question"></div>
+                    <div class="input-area">
+                        <input type="text" id="answer-input" placeholder="请输入答案" autocomplete="off">
+                        <div class="keyboard-hint">按 Enter 提交，按 Tab 下一题</div>
+                    </div>
+                    <div class="feedback" id="feedback"></div>
+                    <div class="error-type-select" id="error-type-select">
+                        <p>错误原因：</p>
+                        <div class="error-type-btns">
+                            <button class="error-type-btn" data-type="forgot">不记得了</button>
+                            <button class="error-type-btn" data-type="typo">字写错了</button>
+                            <button class="error-type-btn" data-type="cantwrite">字不会写</button>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-primary" id="submit-btn">提交答案</button>
+                        <button class="btn btn-secondary" id="skip-btn">跳过</button>
+                        <button class="btn btn-secondary" id="show-answer-btn" style="display:none;">显示答案</button>
+                        <button class="btn btn-secondary" id="next-btn" style="display:none;">下一题</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-list" class="tab-content" style="display:none;">
+                <div class="poem-list" id="poem-list"></div>
+            </div>
+
+            <div id="tab-errors" class="tab-content" style="display:none;">
+                <div class="filter-section" style="margin-bottom: 16px;">
+                    <select id="filter-error-type">
+                        <option value="all">全部错误类型</option>
+                        <option value="forgot">不记得</option>
+                        <option value="typo">字写错</option>
+                        <option value="cantwrite">不会写</option>
+                        <option value="unmarked">未标注</option>
+                    </select>
+                    <button class="btn btn-secondary btn-small" id="reveal-all-btn">一键显示全部答案</button>
+                </div>
+                <div class="error-book" id="error-book"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="poem-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closePoemModal()">×</button>
+            <div class="modal-title" id="modal-title"></div>
+            <div class="modal-author" id="modal-author"></div>
+            <div class="modal-text" id="modal-text"></div>
+        </div>
+    </div>
+
+    <script>
+    // 诗词数据（内嵌）
+    const POEMS_DATA = [{"author": "王禹偁", "title": "村行", "type": "诗", "lines": ["马穿山径菊初黄", "信马悠悠野兴长", "万壑有声含晚籁", "数峰无语立斜阳", "棠梨叶落胭脂色", "荞麦花开白雪香", "何事吟余忽惆怅", "村桥原树似吾乡"], "raw": "马穿山径菊初黄，信马悠悠野兴长。万壑有声含晚籁，数峰无语立斜阳。棠梨叶落胭脂色，荞麦花开白雪香。何事吟余忽惆怅，村桥原树似吾乡。"}, {"author": "释惠崇", "title": "访杨云卿淮上别墅", "type": "诗", "lines": ["地近得频到", "相携向野亭", "河分冈势断", "春入烧痕青", "望久人收钓", "吟余鹤振翎", "不愁归路晚", "明月上前汀"], "raw": "地近得频到，相携向野亭。河分冈势断，春入烧痕青。望久人收钓，吟余鹤振翎。不愁归路晚，明月上前汀。"}, {"author": "魏野", "title": "登原州城呈张贲从事", "type": "诗", "lines": ["异乡何处最牵愁", "独上边城城上楼", "日暮北来惟有雁", "地寒西去更无州", "数声塞角高还咽", "一派泾河冻不流", "君作贫官我为客", "此中离恨共难收"], "raw": "异乡何处最牵愁？独上边城城上楼。日暮北来惟有雁，地寒西去更无州。数声塞角高还咽，一派泾河冻不流。君作贫官我为客，此中离恨共难收。"}, {"author": "林逋", "title": "山园小梅二首（选一）", "type": "诗", "lines": ["众芳摇落独暄妍", "占尽风情向小园", "疏影横斜水清浅", "暗香浮动月黄昏", "霜禽欲下先偷眼", "粉蝶如知合断魂", "幸有微吟可相狎", "不须檀板共金樽"], "raw": "众芳摇落独暄妍，占尽风情向小园。疏影横斜水清浅，暗香浮动月黄昏。霜禽欲下先偷眼，粉蝶如知合断魂。幸有微吟可相狎，不须檀板共金樽。"}, {"author": "杨亿", "title": "汉武", "type": "诗", "lines": ["蓬莱银阙浪漫漫", "弱水回风欲到难", "光照竹宫劳夜拜", "露漙金掌费朝餐", "力通青海求龙种", "死讳文成食马肝", "待诏先生齿编贝", "那教索米向长安"], "raw": "蓬莱银阙浪漫漫，弱水回风欲到难。光照竹宫劳夜拜，露漙金掌费朝餐。力通青海求龙种，死讳文成食马肝。待诏先生齿编贝，那教索米向长安。"}, {"author": "石延年", "title": "寄尹师鲁", "type": "诗", "lines": ["十年一梦花空委", "依旧河山损桃李", "雁声北去燕南飞", "高楼日日春风里", "眉黛石州山对起", "娇波泪落妆如洗", "汾河不断天南流", "天色无情淡如水"], "raw": "十年一梦花空委，依旧河山损桃李。雁声北去燕南飞，高楼日日春风里。眉黛石州山对起，娇波泪落妆如洗。汾河不断天南流，天色无情淡如水。"}, {"author": "梅尧臣", "title": "陶者", "type": "诗", "lines": ["陶尽门前土", "屋上无片瓦", "十指不沾泥", "鳞鳞居大厦"], "raw": "陶尽门前土，屋上无片瓦。十指不沾泥，鳞鳞居大厦。"}, {"author": "梅尧臣", "title": "鲁山山行", "type": "诗", "lines": ["适与野情惬", "千山高复低", "好峰随处改", "幽径独行迷", "霜落熊升树", "林空鹿饮溪", "人家在何许", "云外一声鸡"], "raw": "适与野情惬，千山高复低。好峰随处改，幽径独行迷。霜落熊升树，林空鹿饮溪。人家在何许，云外一声鸡。"}, {"author": "梅尧臣", "title": "东溪", "type": "诗", "lines": ["行到东溪看水时", "坐临孤屿发船迟", "野凫眠岸有闲意", "老树着花无丑枝", "短短蒲茸齐似剪", "平平沙石净于筛", "情虽不厌住不得", "薄暮归来车马疲"], "raw": "行到东溪看水时，坐临孤屿发船迟。野凫眠岸有闲意，老树着花无丑枝。短短蒲茸齐似剪，平平沙石净于筛。情虽不厌住不得，薄暮归来车马疲。"}, {"author": "欧阳修", "title": "戏答元珍", "type": "诗", "lines": ["春风疑不到天涯", "二月山城未见花", "残雪压枝犹有橘", "冻雷惊笋欲抽芽", "夜闻归雁生乡思", "病入新年感物华", "曾是洛阳花下客", "野芳虽晚不须嗟"], "raw": "春风疑不到天涯，二月山城未见花。残雪压枝犹有橘，冻雷惊笋欲抽芽。夜闻归雁生乡思，病入新年感物华。曾是洛阳花下客，野芳虽晚不须嗟。"}, {"author": "欧阳修", "title": "明妃曲和王介甫作", "type": "诗", "lines": ["胡人以鞍马为家", "射猎为俗", "泉甘草美无常处", "鸟惊兽骇争驰逐", "谁将汉女嫁胡儿", "风沙无情貌如玉", "身行不遇中国人", "马上自作思归曲", "推手为琵却手琶", "胡人共听亦咨嗟", "玉颜流落死天涯", "琵琶却传来汉家", "汉宫争按新声谱", "遗恨已深声更苦", "纤纤女手生洞房", "学得琵琶不下堂", "不识黄云出塞路", "岂知此声能断肠"], "raw": "胡人以鞍马为家，射猎为俗。泉甘草美无常处，鸟惊兽骇争驰逐。谁将汉女嫁胡儿，风沙无情貌如玉。身行不遇中国人，马上自作思归曲。推手为琵却手琶，胡人共听亦咨嗟。玉颜流落死天涯，琵琶却传来汉家。汉宫争按新声谱，遗恨已深声更苦。纤纤女手生洞房，学得琵琶不下堂。不识黄云出塞路，岂知此声能断肠。"}, {"author": "苏舜钦", "title": "中秋夜吴江亭上对月怀前宰张子野及寄君谟蔡大", "type": "诗", "lines": ["独坐对月心悠悠", "故人不见使我愁", "古今共传惜今夕", "况在松江亭上头", "可怜节物会人意", "十日阴雨此夜收", "不唯人间重此月", "天亦有意于中秋", "长空无瑕露表里", "拂拂渐上寒光流", "江平万顷正碧色", "上下清澈双璧浮", "自视直欲见眉发", "仰听已复闻棹讴", "群动悄然息", "独此万古流", "安得长风送此月", "飞照故人杯"], "raw": "独坐对月心悠悠，故人不见使我愁。古今共传惜今夕，况在松江亭上头？可怜节物会人意，十日阴雨此夜收。不唯人间重此月，天亦有意于中秋。长空无瑕露表里，拂拂渐上寒光流。江平万顷正碧色，上下清澈双璧浮。自视直欲见眉发，仰听已复闻棹讴。群动悄然息，独此万古流。安得长风送此月，飞照故人杯。"}, {"author": "苏舜钦", "title": "淮中晚泊犊头", "type": "诗", "lines": ["春阴垂野草青青", "时有幽花一树明", "晚泊孤舟古祠下", "满川风雨看潮生"], "raw": "春阴垂野草青青，时有幽花一树明。晚泊孤舟古祠下，满川风雨看潮生。"}, {"author": "邵雍", "title": "插花吟", "type": "诗", "lines": ["头上花枝照酒卮", "酒卮中有好花枝", "身经两世太平日", "眼见四朝全盛时", "况复筋骸粗康健", "那堪时节正芳菲", "酒涵花影红光溜", "争忍花前不醉归"], "raw": "头上花枝照酒卮，酒卮中有好花枝。身经两世太平日，眼见四朝全盛时。况复筋骸粗康健，那堪时节正芳菲。酒涵花影红光溜，争忍花前不醉归。"}, {"author": "王安石", "title": "明妃曲二首（选一）", "type": "诗", "lines": ["明妃初出汉宫时", "泪湿春风鬓脚垂", "低徊顾影无颜色", "尚得君王不自持", "归来却怪丹青手", "入眼平生几曾有；意态由来画不成", "当时枉杀毛延寿", "一去心知更不归", "可怜着尽汉宫衣；寄声欲问塞南事", "只有年年鸿雁飞", "家人万里传消息", "好在毡城莫相忆；君不见咫尺长门闭阿娇", "人生失意无南北"], "raw": "明妃初出汉宫时，泪湿春风鬓脚垂。低徊顾影无颜色，尚得君王不自持。归来却怪丹青手，入眼平生几曾有；意态由来画不成，当时枉杀毛延寿。一去心知更不归，可怜着尽汉宫衣；寄声欲问塞南事，只有年年鸿雁飞。家人万里传消息，好在毡城莫相忆；君不见咫尺长门闭阿娇，人生失意无南北。"}, {"author": "王安石", "title": "泊船瓜洲", "type": "诗", "lines": ["京口瓜洲一水间", "钟山只隔数重山", "春风又绿江南岸", "明月何时照我还"], "raw": "京口瓜洲一水间，钟山只隔数重山。春风又绿江南岸，明月何时照我还？"}, {"author": "王安石", "title": "题西太一宫壁二首（选一）", "type": "诗", "lines": ["柳叶鸣蜩绿暗", "荷花落日红酣", "三十六陂春水", "白头想见江南"], "raw": "柳叶鸣蜩绿暗，荷花落日红酣。三十六陂春水，白头想见江南。"}, {"author": "王安石", "title": "书湖阴先生壁二首（选一）", "type": "诗", "lines": ["茅檐长扫净无苔", "花木成畦手自栽", "一水护田将绿绕", "两山排闼送青来"], "raw": "茅檐长扫净无苔，花木成畦手自栽。一水护田将绿绕，两山排闼送青来。"}, {"author": "苏轼", "title": "和子由渑池怀旧", "type": "诗", "lines": ["人生到处知何似", "应似飞鸿踏雪泥：泥上偶然留指爪", "鸿飞那复计东西", "老僧已死成新塔", "坏壁无由见旧题", "往日崎岖还记否", "路长人困蹇驴嘶"], "raw": "人生到处知何似？应似飞鸿踏雪泥：泥上偶然留指爪，鸿飞那复计东西！老僧已死成新塔，坏壁无由见旧题。往日崎岖还记否？路长人困蹇驴嘶。"}, {"author": "苏轼", "title": "饮湖上初晴后雨二首（选一）", "type": "诗", "lines": ["水光潋滟晴方好", "山色空蒙雨亦奇", "欲把西湖比西子", "淡妆浓抹总相宜"], "raw": "水光潋滟晴方好，山色空蒙雨亦奇。欲把西湖比西子，淡妆浓抹总相宜。"}, {"author": "苏轼", "title": "游金山寺", "type": "诗", "lines": ["我家江水初发源", "宦游直送江入海", "闻道潮头一丈高", "天寒尚有沙痕在", "中泠南畔石盘陀", "古来出没随涛波", "试登绝顶望乡国", "江南江北青山多", "羁愁畏晚寻归楫", "山僧苦留看落日", "微风万顷靴文细", "断霞半空鱼尾赤", "是时江月初生魄", "二更月落天深黑", "江心似有炬火明", "飞焰照山栖鸟惊", "怅然归卧心莫识", "非鬼非人竟何物", "江山如此不归山", "江神见怪惊我顽", "我谢江神岂得已", "有田不归如江水"], "raw": "我家江水初发源，宦游直送江入海。闻道潮头一丈高，天寒尚有沙痕在。中泠南畔石盘陀，古来出没随涛波。试登绝顶望乡国，江南江北青山多。羁愁畏晚寻归楫，山僧苦留看落日。微风万顷靴文细，断霞半空鱼尾赤。是时江月初生魄，二更月落天深黑。江心似有炬火明，飞焰照山栖鸟惊。怅然归卧心莫识，非鬼非人竟何物。江山如此不归山，江神见怪惊我顽。我谢江神岂得已，有田不归如江水。"}, {"author": "苏轼", "title": "题西林壁", "type": "诗", "lines": ["横看成岭侧成峰", "远近高低各不同", "不识庐山真面目", "只缘身在此山中"], "raw": "横看成岭侧成峰，远近高低各不同。不识庐山真面目，只缘身在此山中。"}, {"author": "苏轼", "title": "惠崇春江晚景二首（选一）", "type": "诗", "lines": ["竹外桃花三两枝", "春江水暖鸭先知", "蒌蒿满地芦芽短", "正是河豚欲上时"], "raw": "竹外桃花三两枝，春江水暖鸭先知。蒌蒿满地芦芽短，正是河豚欲上时。"}, {"author": "苏轼", "title": "汲江煎茶", "type": "诗", "lines": ["活水还须活火烹", "自临钓石取深清", "大瓢贮月归春瓮", "小杓分江入夜瓶", "雪乳已翻煎处脚", "松风忽作泻时声", "枯肠未易禁三碗", "坐听荒城长短更"], "raw": "活水还须活火烹，自临钓石取深清。大瓢贮月归春瓮，小杓分江入夜瓶。雪乳已翻煎处脚，松风忽作泻时声。枯肠未易禁三碗，坐听荒城长短更。"}, {"author": "苏轼", "title": "六月二十日夜渡海", "type": "诗", "lines": ["参横斗转欲三更", "苦雨终风也解晴", "云散月明谁点缀", "天容海色本澄清", "空余鲁叟乘桴意", "粗识轩辕奏乐声", "九死南荒吾不恨", "兹游奇绝冠平生"], "raw": "参横斗转欲三更，苦雨终风也解晴。云散月明谁点缀？天容海色本澄清。空余鲁叟乘桴意，粗识轩辕奏乐声。九死南荒吾不恨，兹游奇绝冠平生。"}, {"author": "释道潜", "title": "东园三首（选一）", "type": "诗", "lines": ["斜照明明射竹篱", "桑阴翳翳麦蛾飞", "萧条一径无来辙", "时见羸牛引犊归"], "raw": "斜照明明射竹篱，桑阴翳翳麦蛾飞。萧条一径无来辙，时见羸牛引犊归。"}, {"author": "孔平仲", "title": "禾熟三首（选一）", "type": "诗", "lines": ["百里西风禾黍香", "鸣泉落窦谷登场", "老牛粗了耕耘债", "啮草坡头卧夕阳"], "raw": "百里西风禾黍香，鸣泉落窦谷登场。老牛粗了耕耘债，啮草坡头卧夕阳。"}, {"author": "黄庭坚", "title": "登快阁", "type": "诗", "lines": ["痴儿了却公家事", "快阁东西倚晚晴", "落木千山天远大", "澄江一道月分明", "朱弦已为佳人绝", "青眼聊因美酒横", "万里归船弄长笛", "此心吾与白鸥盟"], "raw": "痴儿了却公家事，快阁东西倚晚晴。落木千山天远大，澄江一道月分明。朱弦已为佳人绝，青眼聊因美酒横。万里归船弄长笛，此心吾与白鸥盟。"}, {"author": "黄庭坚", "title": "送王郎", "type": "诗", "lines": ["酌君以蒲城桑落之酒", "泛君以湘累秋菊之英", "赠君以黟川点漆之墨", "送君以阳关堕泪之声", "酒浇胸次之磊块", "菊制短世之颓龄", "墨以传万古文章之印", "歌以写一家兄弟之情", "江山千里俱头白", "骨肉十年终眼青", "连床夜语鸡戒晓", "书囊无底谈未了", "有功翰墨乃如此", "何恨远别音书少", "炒沙作糜终不饱", "镂冰文章费工巧", "要须心地收汗马", "孔孟行世日杲杲", "有弟有弟力持家", "妇能养姑供珍鲑", "儿大诗书女丝麻", "公但读书煮春茶"], "raw": "酌君以蒲城桑落之酒，泛君以湘累秋菊之英。赠君以黟川点漆之墨，送君以阳关堕泪之声。酒浇胸次之磊块，菊制短世之颓龄。墨以传万古文章之印，歌以写一家兄弟之情。江山千里俱头白，骨肉十年终眼青。连床夜语鸡戒晓，书囊无底谈未了。有功翰墨乃如此，何恨远别音书少。炒沙作糜终不饱，镂冰文章费工巧。要须心地收汗马，孔孟行世日杲杲。有弟有弟力持家，妇能养姑供珍鲑。儿大诗书女丝麻，公但读书煮春茶。"}, {"author": "黄庭坚", "title": "寄黄几复", "type": "诗", "lines": ["我居北海君南海", "寄雁传书谢不能", "桃李春风一杯酒", "江湖夜雨十年灯", "持家但有四立壁", "治病不蕲三折肱", "想得读书头已白", "隔溪猿哭瘴溪藤"], "raw": "我居北海君南海，寄雁传书谢不能。桃李春风一杯酒，江湖夜雨十年灯。持家但有四立壁，治病不蕲三折肱。想得读书头已白，隔溪猿哭瘴溪藤。"}, {"author": "黄庭坚", "title": "和答钱穆父咏猩猩毛笔", "type": "诗", "lines": ["爱酒醉魂在", "能言机事疏", "平生几两屐", "身后五车书", "物色看王会", "勋劳在石渠", "拔毛能济世", "端为谢杨朱"], "raw": "爱酒醉魂在，能言机事疏。平生几两屐，身后五车书。物色看王会，勋劳在石渠。拔毛能济世，端为谢杨朱。"}, {"author": "黄庭坚", "title": "鄂州南楼书事四首（选一）", "type": "诗", "lines": ["四顾山光接水光", "凭栏十里芰荷香", "清风明月无人管", "并作南楼一味凉"], "raw": "四顾山光接水光，凭栏十里芰荷香。清风明月无人管，并作南楼一味凉。"}, {"author": "秦观", "title": "春日五首（选一）", "type": "诗", "lines": ["一夕轻雷落万丝", "霁光浮瓦碧参差", "有情芍药含春泪", "无力蔷薇卧晓枝"], "raw": "一夕轻雷落万丝，霁光浮瓦碧参差。有情芍药含春泪，无力蔷薇卧晓枝。"}, {"author": "陈师道", "title": "示三子", "type": "诗", "lines": ["去远即相忘", "归近不可忍", "儿女已在眼", "眉目略不省", "喜极不得语", "泪尽方一哂", "了知不是梦", "忽忽心未稳"], "raw": "去远即相忘，归近不可忍。儿女已在眼，眉目略不省。喜极不得语，泪尽方一哂。了知不是梦，忽忽心未稳。"}, {"author": "陈师道", "title": "绝句四首（选一）", "type": "诗", "lines": ["书当快意读易尽", "客有可人期不来", "世事相违每如此", "好怀百岁几回开"], "raw": "书当快意读易尽，客有可人期不来。世事相违每如此，好怀百岁几回开。"}, {"author": "陈师道", "title": "宿齐河", "type": "诗", "lines": ["烛暗人初寂", "寒生夜向深", "潜鱼聚沙窟", "坠鸟滑霜林", "稍作他方计", "初回万里心", "还家只有梦", "更着晓寒侵"], "raw": "烛暗人初寂，寒生夜向深。潜鱼聚沙窟，坠鸟滑霜林。稍作他方计，初回万里心。还家只有梦，更着晓寒侵。"}, {"author": "张耒", "title": "海州道中二首（选一）", "type": "诗", "lines": ["秋野苍苍秋日黄", "黄蒿满田苍耳长", "草虫咿咿鸣复咽", "一秋雨多水满辙", "渡头鸣舂村径斜", "悠悠小蝶飞豆花", "逃屋无人草满家", "累累秋蔓悬寒瓜"], "raw": "秋野苍苍秋日黄，黄蒿满田苍耳长。草虫咿咿鸣复咽，一秋雨多水满辙。渡头鸣舂村径斜，悠悠小蝶飞豆花。逃屋无人草满家，累累秋蔓悬寒瓜。"}, {"author": "张耒", "title": "怀金陵三首（选一）", "type": "诗", "lines": ["曾作金陵烂漫游", "北归尘土变衣裘", "芰荷声里孤舟雨", "卧入江南第一州"], "raw": "曾作金陵烂漫游，北归尘土变衣裘。芰荷声里孤舟雨，卧入江南第一州。"}, {"author": "吕本中", "title": "春日游湖上", "type": "诗", "lines": ["双飞燕子几时回", "夹岸桃花蘸水开", "春雨断桥人不度", "小舟撑出柳阴来"], "raw": "双飞燕子几时回？夹岸桃花蘸水开。春雨断桥人不度，小舟撑出柳阴来。"}, {"author": "曾几", "title": "兵乱后自嬉杂诗（选二）其一", "type": "诗", "lines": ["晚逢戎马际", "处处聚兵戈", "老去功名薄", "愁来岁月多", "干戈犹未定", "吾道竟如何", "惟有孤灯在", "相看意未磨"], "raw": "晚逢戎马际，处处聚兵戈。老去功名薄，愁来岁月多。干戈犹未定，吾道竟如何。惟有孤灯在，相看意未磨。"}, {"author": "曾几", "title": "兵乱后自嬉杂诗（选二）其二", "type": "诗", "lines": ["万里烟尘里", "三年战伐中", "伤心看落日", "洒泪向秋风", "旧友飘零尽", "新交邂逅逢", "生涯一如此", "吾道岂终穷"], "raw": "万里烟尘里，三年战伐中。伤心看落日，洒泪向秋风。旧友飘零尽，新交邂逅逢。生涯一如此，吾道岂终穷。"}, {"author": "曾几", "title": "苏秀道中，自七月二十五日夜大雨三日，秋苗以苏，喜而有作", "type": "诗", "lines": ["一夕骄阳转作霖", "梦回凉冷润衣襟", "不愁屋漏床床湿", "且喜溪流岸岸深", "千里稻花应秀色", "五更桐叶最佳音", "无田似我犹欣舞", "何况田间望岁心"], "raw": "一夕骄阳转作霖，梦回凉冷润衣襟。不愁屋漏床床湿，且喜溪流岸岸深。千里稻花应秀色，五更桐叶最佳音。无田似我犹欣舞，何况田间望岁心。"}, {"author": "陈与义", "title": "和张规臣〈水墨梅〉五绝（选四）其一", "type": "诗", "lines": ["画工羞死不须夸", "造化功夫不在它", "雪里冰姿寒更甚", "笔端春色淡无华"], "raw": "画工羞死不须夸，造化功夫不在它。雪里冰姿寒更甚，笔端春色淡无华。"}, {"author": "陈与义", "title": "和张规臣〈水墨梅〉五绝（选四）其二", "type": "诗", "lines": ["嫣然一笑竹篱间", "桃李漫山总俗颜", "自是幽人怜独冷", "故教疏影落人间"], "raw": "嫣然一笑竹篱间，桃李漫山总俗颜。自是幽人怜独冷，故教疏影落人间。"}, {"author": "陈与义", "title": "和张规臣〈水墨梅〉五绝（选四）其三", "type": "诗", "lines": ["老干疏花取次开", "暗香浮动月徘徊", "西湖处士风流在", "不与凡花斗艳来"], "raw": "老干疏花取次开，暗香浮动月徘徊。西湖处士风流在，不与凡花斗艳来。"}, {"author": "陈与义", "title": "和张规臣〈水墨梅〉五绝（选四）其四", "type": "诗", "lines": ["一枝寒玉照清溪", "影落寒波色更奇", "莫道无香意已足", "清风明月自相知"], "raw": "一枝寒玉照清溪，影落寒波色更奇。莫道无香意已足，清风明月自相知。"}, {"author": "陈与义", "title": "登岳阳楼二首（选一）", "type": "诗", "lines": ["洞庭之东江水西", "帘旌不动夕阳迟", "登临吴蜀横分地", "徙倚湖山欲暮时", "万里来游还望远", "三年多难更凭危", "白头吊古风霜里", "老木沧波无限悲"], "raw": "洞庭之东江水西，帘旌不动夕阳迟。登临吴蜀横分地，徙倚湖山欲暮时。万里来游还望远，三年多难更凭危。白头吊古风霜里，老木沧波无限悲。"}, {"author": "陈与义", "title": "春日二首（选一）", "type": "诗", "lines": ["朝来庭树有鸣禽", "红绿扶春上远林", "忽有好诗生眼底", "安排句法已难寻"], "raw": "朝来庭树有鸣禽，红绿扶春上远林。忽有好诗生眼底，安排句法已难寻。"}, {"author": "范仲淹", "title": "渔家傲・塞下秋来风景异", "type": "词", "lines": ["塞下秋来风景异", "衡阳雁去无留意", "四面边声连角起", "千嶂里", "长烟落日孤城闭", "浊酒一杯家万里", "燕然未勒归无计", "羌管悠悠霜满地", "人不寐", "将军白发征夫泪"], "raw": "塞下秋来风景异，衡阳雁去无留意。四面边声连角起，千嶂里，长烟落日孤城闭。浊酒一杯家万里，燕然未勒归无计。羌管悠悠霜满地，人不寐，将军白发征夫泪。"}, {"author": "范仲淹", "title": "苏幕遮・碧云天", "type": "词", "lines": ["碧云天", "黄叶地", "秋色连波", "波上寒烟翠", "山映斜阳天接水", "芳草无情", "更在斜阳外", "黯乡魂", "追旅思", "夜夜除非", "好梦留人睡", "明月楼高休独倚", "酒入愁肠", "化作相思泪"], "raw": "碧云天，黄叶地，秋色连波，波上寒烟翠。山映斜阳天接水，芳草无情，更在斜阳外。黯乡魂，追旅思，夜夜除非，好梦留人睡。明月楼高休独倚，酒入愁肠，化作相思泪。"}, {"author": "柳永", "title": "望海潮・东南形胜", "type": "词", "lines": ["东南形胜", "三吴都会", "钱塘自古繁华", "烟柳画桥", "风帘翠幕", "参差十万人家", "云树绕堤沙", "怒涛卷霜雪", "天堑无涯", "市列珠玑", "户盈罗绮", "竞豪奢", "重湖叠巘清嘉", "有三秋桂子", "十里荷花", "羌管弄晴", "菱歌泛夜", "嬉嬉钓叟莲娃", "千骑拥高牙", "乘醉听箫鼓", "吟赏烟霞", "异日图将好景", "归去凤池夸"], "raw": "东南形胜，三吴都会，钱塘自古繁华。烟柳画桥，风帘翠幕，参差十万人家。云树绕堤沙，怒涛卷霜雪，天堑无涯。市列珠玑，户盈罗绮，竞豪奢。重湖叠巘清嘉，有三秋桂子，十里荷花。羌管弄晴，菱歌泛夜，嬉嬉钓叟莲娃。千骑拥高牙，乘醉听箫鼓，吟赏烟霞。异日图将好景，归去凤池夸。"}, {"author": "柳永", "title": "雨霖铃・寒蝉凄切", "type": "词", "lines": ["寒蝉凄切", "对长亭晚", "骤雨初歇", "都门帐饮无绪", "留恋处", "兰舟催发", "执手相看泪眼", "竟无语凝噎", "念去去", "千里烟波", "暮霭沉沉楚天阔", "多情自古伤离别", "更那堪", "冷落清秋节", "今宵酒醒何处", "杨柳岸", "晓风残月", "此去经年", "应是良辰好景虚设", "便纵有千种风情", "更与何人说"], "raw": "寒蝉凄切，对长亭晚，骤雨初歇。都门帐饮无绪，留恋处，兰舟催发。执手相看泪眼，竟无语凝噎。念去去，千里烟波，暮霭沉沉楚天阔。多情自古伤离别，更那堪，冷落清秋节！今宵酒醒何处？杨柳岸，晓风残月。此去经年，应是良辰好景虚设。便纵有千种风情，更与何人说？"}, {"author": "柳永", "title": "定风波・自春来", "type": "词", "lines": ["自春来", "惨绿愁红", "芳心是事可可", "日上花梢", "莺穿柳带", "犹压香衾卧", "暖酥消", "腻云亸", "终日厌厌倦梳裹", "无那", "恨薄情一去", "音书无个", "早知恁么", "悔当初", "不把雕鞍锁", "向鸡窗", "只与蛮笺象管", "拘束教吟课", "镇相随", "莫抛躲", "针线闲拈伴伊坐", "和我", "免使年少", "光阴虚过"], "raw": "自春来、惨绿愁红，芳心是事可可。日上花梢，莺穿柳带，犹压香衾卧。暖酥消，腻云亸，终日厌厌倦梳裹。无那。恨薄情一去，音书无个。早知恁么。悔当初、不把雕鞍锁。向鸡窗、只与蛮笺象管，拘束教吟课。镇相随，莫抛躲，针线闲拈伴伊坐。和我。免使年少，光阴虚过。"}, {"author": "张先", "title": "天仙子・水调数声持酒听", "type": "词", "lines": ["水调数声持酒听", "午醉醒来愁未醒", "送春春去几时回", "临晚镜", "伤流景", "往事后期空记省", "沙上并禽池上暝", "云破月来花弄影", "重重帘幕密遮灯", "风不定", "人初静", "明日落红应满径"], "raw": "水调数声持酒听，午醉醒来愁未醒。送春春去几时回？临晚镜，伤流景，往事后期空记省。沙上并禽池上暝，云破月来花弄影。重重帘幕密遮灯，风不定，人初静，明日落红应满径。"}, {"author": "张先", "title": "木兰花・龙头舴艋吴儿竞", "type": "词", "lines": ["龙头舴艋吴儿竞", "笋柱秋千游女并", "芳洲拾翠暮忘归", "秀野踏青来不定", "行云去后遥山暝", "已放笙歌池院静", "中庭月色正清明", "无数杨花过无影"], "raw": "龙头舴艋吴儿竞，笋柱秋千游女并。芳洲拾翠暮忘归，秀野踏青来不定。行云去后遥山暝，已放笙歌池院静。中庭月色正清明，无数杨花过无影。"}, {"author": "晏殊", "title": "破阵子・燕子来时新社", "type": "词", "lines": ["燕子来时新社", "梨花落后清明", "池上碧苔三四点", "叶底黄鹂一两声", "日长飞絮轻", "巧笑东邻女伴", "采桑径里逢迎", "疑怪昨宵春梦好", "元是今朝斗草赢", "笑从双脸生"], "raw": "燕子来时新社，梨花落后清明。池上碧苔三四点，叶底黄鹂一两声，日长飞絮轻。巧笑东邻女伴，采桑径里逢迎。疑怪昨宵春梦好，元是今朝斗草赢，笑从双脸生。"}, {"author": "晏殊", "title": "浣溪沙・一曲新词酒一杯", "type": "词", "lines": ["一曲新词酒一杯", "去年天气旧亭台", "夕阳西下几时回", "无可奈何花落去", "似曾相识燕归来", "小园香径独徘徊"], "raw": "一曲新词酒一杯，去年天气旧亭台。夕阳西下几时回？无可奈何花落去，似曾相识燕归来。小园香径独徘徊。"}, {"author": "欧阳修", "title": "生查子・去年元夜时", "type": "词", "lines": ["去年元夜时", "花市灯如昼", "月上柳梢头", "人约黄昏后", "今年元夜时", "月与灯依旧", "不见去年人", "泪湿春衫袖"], "raw": "去年元夜时，花市灯如昼。月上柳梢头，人约黄昏后。今年元夜时，月与灯依旧。不见去年人，泪湿春衫袖。"}, {"author": "王安石", "title": "桂枝香・登临送目", "type": "词", "lines": ["登临送目", "正故国晚秋", "天气初肃", "千里澄江似练", "翠峰如簇", "征帆去棹残阳里", "背西风", "酒旗斜矗", "彩舟云淡", "星河鹭起", "画图难足", "念往昔", "繁华竞逐", "叹门外楼头", "悲恨相续", "千古凭高对此", "谩嗟荣辱", "六朝旧事随流水", "但寒烟衰草凝绿", "至今商女", "时时犹唱", "后庭遗曲"], "raw": "登临送目，正故国晚秋，天气初肃。千里澄江似练，翠峰如簇。征帆去棹残阳里，背西风，酒旗斜矗。彩舟云淡，星河鹭起，画图难足。念往昔，繁华竞逐，叹门外楼头，悲恨相续。千古凭高对此，谩嗟荣辱。六朝旧事随流水，但寒烟衰草凝绿。至今商女，时时犹唱，后庭遗曲。"}, {"author": "晏几道", "title": "思远人・红叶黄花秋意晚", "type": "词", "lines": ["红叶黄花秋意晚", "千里念行客", "飞云过尽", "归鸿无信", "何处寄书得", "泪弹不尽临窗滴", "就砚旋研墨", "渐写到别来", "此情深处", "红笺为无色"], "raw": "红叶黄花秋意晚，千里念行客。飞云过尽，归鸿无信，何处寄书得。泪弹不尽临窗滴，就砚旋研墨。渐写到别来，此情深处，红笺为无色。"}, {"author": "晏几道", "title": "鹧鸪天・彩袖殷勤捧玉钟", "type": "词", "lines": ["彩袖殷勤捧玉钟", "当年拚却醉颜红", "舞低杨柳楼心月", "歌尽桃花扇底风", "从别后", "忆相逢", "几回魂梦与君同", "今宵剩把银釭照", "犹恐相逢是梦中"], "raw": "彩袖殷勤捧玉钟，当年拚却醉颜红。舞低杨柳楼心月，歌尽桃花扇底风。从别后，忆相逢，几回魂梦与君同。今宵剩把银釭照，犹恐相逢是梦中。"}, {"author": "王观", "title": "卜算子・水是眼波横", "type": "词", "lines": ["水是眼波横", "山是眉峰聚", "欲问行人去那边", "眉眼盈盈处", "才始送春归", "又送君归去", "若到江南赶上春", "千万和春住"], "raw": "水是眼波横，山是眉峰聚。欲问行人去那边？眉眼盈盈处。才始送春归，又送君归去。若到江南赶上春，千万和春住。"}, {"author": "苏轼", "title": "离亭燕・一带江山如画", "type": "词", "lines": ["一带江山如画", "风物向秋潇洒", "水浸碧天何处断", "霁色冷光相射", "蓼岸荻花洲", "掩映竹篱茅舍", "天际客帆高挂", "烟外酒旗低亚", "多少六朝兴废事", "尽入渔樵闲话", "怅望倚危栏", "红日无言西下"], "raw": "一带江山如画，风物向秋潇洒。水浸碧天何处断？霁色冷光相射。蓼岸荻花洲，掩映竹篱茅舍。天际客帆高挂，烟外酒旗低亚。多少六朝兴废事，尽入渔樵闲话。怅望倚危栏，红日无言西下。"}, {"author": "苏轼", "title": "江城子・老夫聊发少年狂", "type": "词", "lines": ["老夫聊发少年狂", "左牵黄", "右擎苍", "锦帽貂裘", "千骑卷平冈", "为报倾城随太守", "亲射虎", "看孙郎", "酒酣胸胆尚开张", "鬓微霜", "又何妨", "持节云中", "何日遣冯唐", "会挽雕弓如满月", "西北望", "射天狼"], "raw": "老夫聊发少年狂，左牵黄，右擎苍，锦帽貂裘，千骑卷平冈。为报倾城随太守，亲射虎，看孙郎。酒酣胸胆尚开张，鬓微霜，又何妨！持节云中，何日遣冯唐？会挽雕弓如满月，西北望，射天狼。"}, {"author": "苏轼", "title": "江城子・十年生死两茫茫", "type": "词", "lines": ["十年生死两茫茫", "不思量", "自难忘", "千里孤坟", "无处话凄凉", "纵使相逢应不识", "尘满面", "鬓如霜", "夜来幽梦忽还乡", "小轩窗", "正梳妆", "相顾无言", "惟有泪千行", "料得年年肠断处", "明月夜", "短松冈"], "raw": "十年生死两茫茫，不思量，自难忘。千里孤坟，无处话凄凉。纵使相逢应不识，尘满面，鬓如霜。夜来幽梦忽还乡，小轩窗，正梳妆。相顾无言，惟有泪千行。料得年年肠断处，明月夜，短松冈。"}, {"author": "苏轼", "title": "水调歌头・明月几时有", "type": "词", "lines": ["明月几时有", "把酒问青天", "不知天上宫阙", "今夕是何年", "我欲乘风归去", "又恐琼楼玉宇", "高处不胜寒", "起舞弄清影", "何似在人间", "转朱阁", "低绮户", "照无眠", "不应有恨", "何事长向别时圆", "人有悲欢离合", "月有阴晴圆缺", "此事古难全", "但愿人长久", "千里共婵娟"], "raw": "明月几时有？把酒问青天。不知天上宫阙，今夕是何年。我欲乘风归去，又恐琼楼玉宇，高处不胜寒。起舞弄清影，何似在人间。转朱阁，低绮户，照无眠。不应有恨，何事长向别时圆？人有悲欢离合，月有阴晴圆缺，此事古难全。但愿人长久，千里共婵娟。"}, {"author": "苏轼", "title": "浣溪沙", "type": "词", "lines": ["簌簌衣巾落枣花", "村南村北响缫车", "牛衣古柳卖黄瓜", "酒困路长惟欲睡", "日高人渴漫思茶", "敲门试问野人家"], "raw": "簌簌衣巾落枣花，村南村北响缫车，牛衣古柳卖黄瓜。酒困路长惟欲睡，日高人渴漫思茶，敲门试问野人家。"}, {"author": "苏轼", "title": "定风波・莫听穿林打叶声", "type": "词", "lines": ["莫听穿林打叶声", "何妨吟啸且徐行", "竹杖芒鞋轻胜马", "谁怕", "一蓑烟雨任平生", "料峭春风吹酒醒", "微冷", "山头斜照却相迎", "回首向来萧瑟处", "归去", "也无风雨也无晴"], "raw": "莫听穿林打叶声，何妨吟啸且徐行。竹杖芒鞋轻胜马，谁怕？一蓑烟雨任平生。料峭春风吹酒醒，微冷，山头斜照却相迎。回首向来萧瑟处，归去，也无风雨也无晴。"}, {"author": "苏轼", "title": "鹧鸪天・林断山明竹隐墙", "type": "词", "lines": ["林断山明竹隐墙", "乱蝉衰草小池塘", "翻空白鸟时时见", "照水红蕖细细香", "村舍外", "古城旁", "杖藜徐步转斜阳", "殷勤昨夜三更雨", "又得浮生一日凉"], "raw": "林断山明竹隐墙，乱蝉衰草小池塘。翻空白鸟时时见，照水红蕖细细香。村舍外，古城旁，杖藜徐步转斜阳。殷勤昨夜三更雨，又得浮生一日凉。"}, {"author": "苏轼", "title": "念奴娇・大江东去", "type": "词", "lines": ["大江东去", "浪淘尽", "千古风流人物", "故垒西边", "人道是", "三国周郎赤壁", "乱石穿空", "惊涛拍岸", "卷起千堆雪", "江山如画", "一时多少豪杰", "遥想公瑾当年", "小乔初嫁了", "雄姿英发", "羽扇纶巾", "谈笑间", "樯橹灰飞烟灭", "故国神游", "多情应笑我", "早生华发", "人生如梦", "一尊还酹江月"], "raw": "大江东去，浪淘尽，千古风流人物。故垒西边，人道是，三国周郎赤壁。乱石穿空，惊涛拍岸，卷起千堆雪。江山如画，一时多少豪杰。遥想公瑾当年，小乔初嫁了，雄姿英发。羽扇纶巾，谈笑间，樯橹灰飞烟灭。故国神游，多情应笑我，早生华发。人生如梦，一尊还酹江月。"}, {"author": "李之仪", "title": "卜算子・我住长江头", "type": "词", "lines": ["我住长江头", "君住长江尾", "日日思君不见君", "共饮长江水", "此水几时休", "此恨何时已", "只愿君心似我心", "定不负相思意"], "raw": "我住长江头，君住长江尾。日日思君不见君，共饮长江水。此水几时休，此恨何时已。只愿君心似我心，定不负相思意。"}, {"author": "秦观", "title": "满庭芳・山抹微云", "type": "词", "lines": ["山抹微云", "天连衰草", "画角声断谯门", "暂停征棹", "聊共引离尊", "多少蓬莱旧事", "空回首", "烟霭纷纷", "斜阳外", "寒鸦万点", "流水绕孤村", "销魂", "当此际", "香囊暗解", "罗带轻分", "谩赢得青楼", "薄幸名存", "此去何时见也", "襟袖上", "空惹啼痕", "伤情处", "高城望断", "灯火已黄昏"], "raw": "山抹微云，天连衰草，画角声断谯门。暂停征棹，聊共引离尊。多少蓬莱旧事，空回首、烟霭纷纷。斜阳外，寒鸦万点，流水绕孤村。销魂，当此际，香囊暗解，罗带轻分。谩赢得青楼，薄幸名存。此去何时见也？襟袖上、空惹啼痕。伤情处，高城望断，灯火已黄昏。"}, {"author": "秦观", "title": "鹊桥仙・纤云弄巧", "type": "词", "lines": ["纤云弄巧", "飞星传恨", "银汉迢迢暗度", "金风玉露一相逢", "便胜却人间无数", "柔情似水", "佳期如梦", "忍顾鹊桥归路", "两情若是久长时", "又岂在朝朝暮暮"], "raw": "纤云弄巧，飞星传恨，银汉迢迢暗度。金风玉露一相逢，便胜却人间无数。柔情似水，佳期如梦，忍顾鹊桥归路。两情若是久长时，又岂在朝朝暮暮。"}, {"author": "周邦彦", "title": "西河・佳丽地", "type": "词", "lines": ["佳丽地", "南朝盛事谁记", "山围故国绕清江", "髻鬟对起", "怒涛寂寞打孤城", "风樯遥度天际", "断崖树", "犹倒倚", "莫愁艇子曾系", "空余旧迹郁苍苍", "雾沉半垒", "夜深月过女墙来", "伤心东望淮水", "酒旗戏鼓甚处市", "想依稀", "王谢邻里", "燕子不知何世", "入寻常巷陌人家", "相对如说兴亡", "斜阳里"], "raw": "佳丽地，南朝盛事谁记？山围故国绕清江，髻鬟对起。怒涛寂寞打孤城，风樯遥度天际。断崖树，犹倒倚，莫愁艇子曾系。空余旧迹郁苍苍，雾沉半垒。夜深月过女墙来，伤心东望淮水。酒旗戏鼓甚处市？想依稀、王谢邻里。燕子不知何世，入寻常巷陌人家，相对如说兴亡，斜阳里。"}, {"author": "周邦彦", "title": "兰陵王・柳阴直", "type": "词", "lines": ["柳阴直", "烟里丝丝弄碧", "隋堤上", "曾见几番", "拂水飘绵送行色", "登临望故国", "谁识京华倦客", "长亭路", "年去岁来", "应折柔条过千尺", "闲寻旧踪迹", "又酒趁哀弦", "灯照离席", "梨花榆火催寒食", "愁一箭风快", "半篙波暖", "回头迢递便数驿", "望人在天北", "凄恻", "恨堆积", "渐别浦萦回", "津堠岑寂", "斜阳冉冉春无极", "念月榭携手", "露桥闻笛", "沉思前事", "似梦里", "泪暗滴"], "raw": "柳阴直，烟里丝丝弄碧。隋堤上、曾见几番，拂水飘绵送行色。登临望故国，谁识京华倦客？长亭路，年去岁来，应折柔条过千尺。闲寻旧踪迹，又酒趁哀弦，灯照离席。梨花榆火催寒食。愁一箭风快，半篙波暖，回头迢递便数驿，望人在天北。凄恻，恨堆积！渐别浦萦回，津堠岑寂，斜阳冉冉春无极。念月榭携手，露桥闻笛。沉思前事，似梦里，泪暗滴。"}, {"author": "周邦彦", "title": "六丑・正单衣试酒", "type": "词", "lines": ["正单衣试酒", "恨客里", "光阴虚掷", "愿春暂留", "春归如过翼", "一去无迹", "为问花何在", "夜来风雨", "葬楚宫倾国", "钗钿堕处遗香泽", "乱点桃蹊", "轻翻柳陌", "多情为谁追惜", "但蜂媒蝶使", "时叩窗槅", "东园岑寂", "渐蒙笼暗碧", "静绕珍丛底", "成叹息", "长条故惹行客", "似牵衣待话", "别情无极", "残英小", "强簪巾帻；终不似", "一朵钗头颤袅", "向人敧侧", "漂流处", "莫趁潮汐", "恐断红", "尚有相思字", "何由见得"], "raw": "正单衣试酒，恨客里、光阴虚掷。愿春暂留，春归如过翼，一去无迹。为问花何在？夜来风雨，葬楚宫倾国。钗钿堕处遗香泽，乱点桃蹊，轻翻柳陌。多情为谁追惜？但蜂媒蝶使，时叩窗槅。东园岑寂，渐蒙笼暗碧。静绕珍丛底，成叹息。长条故惹行客，似牵衣待话，别情无极。残英小、强簪巾帻；终不似、一朵钗头颤袅，向人敧侧。漂流处、莫趁潮汐。恐断红、尚有相思字，何由见得？"}, {"author": "朱敦儒", "title": "鹧鸪天・我是清都山水郎", "type": "词", "lines": ["我是清都山水郎", "天教分付与疏狂", "曾批给雨支风券", "累上留云借月章", "诗万首", "酒千觞", "几曾着眼看侯王", "玉楼金阙慵归去", "且插梅花醉洛阳"], "raw": "我是清都山水郎，天教分付与疏狂。曾批给雨支风券，累上留云借月章。诗万首，酒千觞。几曾着眼看侯王？玉楼金阙慵归去，且插梅花醉洛阳。"}, {"author": "李清照", "title": "如梦令・昨夜雨疏风骤", "type": "词", "lines": ["昨夜雨疏风骤", "浓睡不消残酒", "试问卷帘人", "却道海棠依旧", "知否", "知否", "应是绿肥红瘦"], "raw": "昨夜雨疏风骤，浓睡不消残酒。试问卷帘人，却道海棠依旧。知否，知否？应是绿肥红瘦。"}, {"author": "李清照", "title": "渔家傲・天接云涛连晓雾", "type": "词", "lines": ["天接云涛连晓雾", "星河欲转千帆舞", "仿佛梦魂归帝所", "闻天语", "殷勤问我归何处", "我报路长嗟日暮", "学诗谩有惊人句", "九万里风鹏正举", "风休住", "蓬舟吹取三山去"], "raw": "天接云涛连晓雾，星河欲转千帆舞。仿佛梦魂归帝所。闻天语，殷勤问我归何处。我报路长嗟日暮，学诗谩有惊人句。九万里风鹏正举。风休住，蓬舟吹取三山去！"}, {"author": "李清照", "title": "永遇乐・落日熔金", "type": "词", "lines": ["落日熔金", "暮云合璧", "人在何处", "染柳烟浓", "吹梅笛怨", "春意知几许", "元宵佳节", "融和天气", "次第岂无风雨", "来相召", "香车宝马", "谢他酒朋诗侣", "中州盛日", "闺门多暇", "记得偏重三五", "铺翠冠儿", "捻金雪柳", "簇带争济楚", "如今憔悴", "风鬟霜鬓", "怕见夜间出去", "不如向", "帘儿底下", "听人笑语"], "raw": "落日熔金，暮云合璧，人在何处？染柳烟浓，吹梅笛怨，春意知几许？元宵佳节，融和天气，次第岂无风雨？来相召、香车宝马，谢他酒朋诗侣。中州盛日，闺门多暇，记得偏重三五。铺翠冠儿，捻金雪柳，簇带争济楚。如今憔悴，风鬟霜鬓，怕见夜间出去。不如向、帘儿底下，听人笑语。"}, {"author": "李清照", "title": "声声慢・寻寻觅觅", "type": "词", "lines": ["寻寻觅觅", "冷冷清清", "凄凄惨惨戚戚", "乍暖还寒时候", "最难将息", "三杯两盏淡酒", "怎敌他", "晚来风急", "雁过也", "正伤心", "却是旧时相识", "满地黄花堆积", "憔悴损", "如今有谁堪摘", "守着窗儿", "独自怎生得黑", "梧桐更兼细雨", "到黄昏", "点点滴滴", "这次第", "怎一个愁字了得"], "raw": "寻寻觅觅，冷冷清清，凄凄惨惨戚戚。乍暖还寒时候，最难将息。三杯两盏淡酒，怎敌他、晚来风急！雁过也，正伤心，却是旧时相识。满地黄花堆积，憔悴损，如今有谁堪摘？守着窗儿，独自怎生得黑？梧桐更兼细雨，到黄昏、点点滴滴。这次第，怎一个愁字了得！"}];
+
+    // 状态管理
+    let state = loadState();
+    let currentPoem = null;
+    let currentLineIndex = -1;
+    let questionType = 'forward'; // forward: 给上句写下句, backward: 给下句写上句
+    let currentMode = 'random';
+    let sequentialIndex = 0;
+    let filteredPoems = [...POEMS_DATA];
+    let currentErrorIndex = -1;
+
+    // 主题切换
+    function setTheme(theme) {
+        document.body.classList.remove('dark-mode', 'eye-care-mode', 'both-mode');
+        if (theme === 'dark') document.body.classList.add('dark-mode');
+        else if (theme === 'eye-care') document.body.classList.add('eye-care-mode');
+        else if (theme === 'both') document.body.classList.add('both-mode');
+        localStorage.setItem('poetry_quiz_theme', theme);
+    }
+
+    // 加载保存的主题
+    function loadTheme() {
+        const saved = localStorage.getItem('poetry_quiz_theme');
+        if (saved) setTheme(saved);
+    }
+
+    // 同步功能
+    const GIST_DESCRIPTION = '古诗词默写题库同步数据';
+
+    function getStorageKey() {
+        const user = document.getElementById('user-select').value;
+        return 'poetry_quiz_state_' + user;
+    }
+
+    function getSyncToken() {
+        return localStorage.getItem('poetry_quiz_sync_token') || '';
+    }
+
+    function setSyncToken(token) {
+        localStorage.setItem('poetry_quiz_sync_token', token);
+    }
+
+    function loadState() {
+        try {
+            const key = getStorageKey();
+            const saved = localStorage.getItem(key);
+            if (saved) return JSON.parse(saved);
+        } catch(e) {}
+        return { poems: {}, errors: [], totalCorrect: 0, totalWrong: 0 };
+    }
+
+    function saveState() {
+        const key = getStorageKey();
+        localStorage.setItem(key, JSON.stringify(state));
+    }
+
+    async function syncData() {
+        const status = document.getElementById('sync-status');
+        const user = document.getElementById('user-select').value;
+        const filename = 'poetry_quiz_' + user + '.json';
+
+        // 检查token
+        let token = getSyncToken();
+        if (!token) {
+            token = prompt('请输入GitHub Token（ghp_或github_pat_开头）：');
+            if (!token) {
+                status.textContent = '未设置Token';
+                setTimeout(() => status.textContent = '', 2000);
+                return;
+            }
+            setSyncToken(token);
+        }
+
+        status.textContent = '同步中...';
+
+        try {
+            // 先查找用户的Gist
+            const searchResponse = await fetch('https://api.github.com/gists?per_page=100', {
+                headers: { 'Authorization': 'token ' + token }
+            });
+            const gists = await searchResponse.json();
+            const userGist = gists.find(g => g.description === GIST_DESCRIPTION && g.files[filename]);
+
+            let gistId = localStorage.getItem('poetry_quiz_gist_id_' + user);
+            let cloudData = null;
+
+            // 获取云端数据
+            if (userGist) {
+                gistId = userGist.id;
+                localStorage.setItem('poetry_quiz_gist_id_' + user, gistId);
+                const file = userGist.files[filename];
+                if (file) cloudData = JSON.parse(file.content);
+            } else if (gistId) {
+                const response = await fetch('https://api.github.com/gists/' + gistId, {
+                    headers: { 'Authorization': 'token ' + token }
+                });
+                if (response.ok) {
+                    const gist = await response.json();
+                    const file = gist.files[filename];
+                    if (file) cloudData = JSON.parse(file.content);
+                }
+            }
+
+            // 合并数据：合并poems状态和errors
+            if (cloudData) {
+                // 合并poems状态
+                for (const key in cloudData.poems) {
+                    if (!state.poems[key]) {
+                        state.poems[key] = cloudData.poems[key];
+                    } else {
+                        state.poems[key].correct = Math.max(state.poems[key].correct, cloudData.poems[key].correct);
+                        state.poems[key].wrong = Math.max(state.poems[key].wrong, cloudData.poems[key].wrong);
+                        state.poems[key].mastered = state.poems[key].mastered || cloudData.poems[key].mastered;
+                    }
+                }
+                // 合并errors（去重）
+                const existingErrors = new Set(state.errors.map(e => e.poemTitle + e.poemAuthor + e.line));
+                cloudData.errors.forEach(e => {
+                    if (!existingErrors.has(e.poemTitle + e.poemAuthor + e.line)) {
+                        state.errors.push(e);
+                    }
+                });
+                // 合并统计
+                state.totalCorrect = Math.max(state.totalCorrect, cloudData.totalCorrect);
+                state.totalWrong = Math.max(state.totalWrong, cloudData.totalWrong);
+            }
+
+            // 上传到Gist
+            const response = await fetch('https://api.github.com/gists', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'token ' + token,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    description: GIST_DESCRIPTION,
+                    files: {
+                        [filename]: { content: JSON.stringify(state, null, 2) }
+                    }
+                })
+            });
+
+            if (response.ok) {
+                const gist = await response.json();
+                localStorage.setItem('poetry_quiz_gist_id_' + user, gist.id);
+                saveState();
+                updateStats();
+                renderPoemList();
+                renderErrorBook();
+                status.textContent = '同步成功 ✓';
+                setTimeout(() => status.textContent = '', 2000);
+            } else {
+                throw new Error('上传失败');
+            }
+        } catch (e) {
+            status.textContent = '同步失败';
+            setTimeout(() => status.textContent = '', 2000);
+            console.error('Sync error:', e);
+        }
+    }
+
+    // 用户切换时加载对应数据
+    function onUserChange() {
+        state = loadState();
+        updateStats();
+        renderPoemList();
+        renderErrorBook();
+    }
+
+    function getPoemState(poemId) {
+        if (!state.poems[poemId]) {
+            state.poems[poemId] = { correct: 0, wrong: 0, mastered: false };
+        }
+        return state.poems[poemId];
+    }
+
+    // 初始化
+    function init() {
+        loadTheme();
+        document.getElementById('total-count').textContent = POEMS_DATA.length;
+        populateFilters();
+        updateStats();
+        setupEventListeners();
+        renderPoemSidebar();
+        renderPoemList();
+        renderErrorBook();
+        nextQuestion();
+    }
+
+    function populateFilters() {
+        const authors = [...new Set(POEMS_DATA.map(p => p.author))].sort();
+        const select = document.getElementById('filter-author');
+        authors.forEach(author => {
+            const option = document.createElement('option');
+            option.value = author;
+            option.textContent = author;
+            select.appendChild(option);
+        });
+
+        // 指定篇目下拉框
+        const specificSelect = document.getElementById('filter-specific');
+        POEMS_DATA.forEach((p, idx) => {
+            const option = document.createElement('option');
+            option.value = idx;
+            option.textContent = `${p.author}《${p.title}》`;
+            specificSelect.appendChild(option);
+        });
+    }
+
+    function renderPoemSidebar() {
+        const sidebar = document.getElementById('poems-sidebar');
+        // 按类型分组：诗、词
+        const poems = POEMS_DATA.filter(p => p.type === '诗');
+        const cipai = POEMS_DATA.filter(p => p.type === '词');
+
+        let html = '';
+        if (poems.length > 0) {
+            html += '<div class="sidebar-group"><div class="sidebar-title">诗（' + poems.length + '首）</div>';
+            poems.forEach((p, i) => {
+                const idx = POEMS_DATA.indexOf(p);
+                html += `<div class="sidebar-item" data-idx="${idx}" onclick="showPoem(${idx})">${p.author}《${p.title}》</div>`;
+            });
+            html += '</div>';
+        }
+        if (cipai.length > 0) {
+            html += '<div class="sidebar-group"><div class="sidebar-title">词（' + cipai.length + '首）</div>';
+            cipai.forEach((p, i) => {
+                const idx = POEMS_DATA.indexOf(p);
+                html += `<div class="sidebar-item" data-idx="${idx}" onclick="showPoem(${idx})">${p.author}《${p.title}》</div>`;
+            });
+            html += '</div>';
+        }
+        sidebar.innerHTML = html;
+    }
+
+    function showPoem(idx) {
+        const p = POEMS_DATA[idx];
+        const content = document.getElementById('poems-content');
+        // 按所有标点断句：逗号、句号、问号、感叹号、分号后换行
+        const formattedText = p.raw
+            .replace(/([，。！？；])/g, '$1\n')
+            .replace(/\n+/g, '\n')
+            .trim();
+        content.innerHTML = `
+            <div class="poem-full">
+                <div class="poem-full-title">《${p.title}》</div>
+                <div class="poem-full-author">${p.author}</div>
+                <div class="poem-full-text">${formattedText}</div>
+            </div>
+        `;
+        // 高亮当前选中
+        document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+        document.querySelector(`.sidebar-item[data-idx="${idx}"]`).classList.add('active');
+    }
+
+    function updateFilters() {
+        const type = document.getElementById('filter-type').value;
+        const author = document.getElementById('filter-author').value;
+        const status = document.getElementById('filter-status').value;
+        const specificIdx = document.getElementById('filter-specific').value;
+
+        // 如果指定了篇目，直接使用该篇目
+        if (specificIdx !== 'all') {
+            filteredPoems = [POEMS_DATA[parseInt(specificIdx)]];
+        } else {
+            filteredPoems = POEMS_DATA.filter(p => {
+                if (type !== 'all' && p.type !== type) return false;
+                if (author !== 'all' && p.author !== author) return false;
+                if (status !== 'all') {
+                    const ps = getPoemState(p.title + p.author);
+                    if (status === 'new' && (ps.correct > 0 || ps.wrong > 0)) return false;
+                    if (status === 'learning' && (ps.correct === 0 || ps.mastered)) return false;
+                    if (status === 'mastered' && !ps.mastered) return false;
+                }
+                return true;
+            });
+        }
+
+        sequentialIndex = 0;
+        nextQuestion();
+    }
+
+    function updateStats() {
+        let mastered = 0, learning = 0;
+        POEMS_DATA.forEach(p => {
+            const ps = getPoemState(p.title + p.author);
+            if (ps.mastered) mastered++;
+            else if (ps.correct > 0 || ps.wrong > 0) learning++;
+        });
+
+        document.getElementById('mastered-count').textContent = mastered;
+        document.getElementById('learning-count').textContent = learning;
+
+        const total = state.totalCorrect + state.totalWrong;
+        const accuracy = total > 0 ? Math.round(state.totalCorrect / total * 100) : 0;
+        document.getElementById('accuracy').textContent = accuracy + '%';
+        document.getElementById('error-count').textContent = state.errors.length;
+    }
+
+    function setupEventListeners() {
+        // 标签切换
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+                tab.classList.add('active');
+                document.getElementById('tab-' + tab.dataset.tab).style.display = 'block';
+            });
+        });
+
+        // 模式切换
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                nextQuestion();
+            });
+        });
+
+        // 筛选
+        ['filter-type', 'filter-author', 'filter-status', 'filter-specific'].forEach(id => {
+            document.getElementById(id).addEventListener('change', updateFilters);
+        });
+
+        // 用户切换
+        document.getElementById('user-select').addEventListener('change', onUserChange);
+
+        // 错题本筛选
+        document.getElementById('filter-error-type').addEventListener('change', renderErrorBook);
+        document.getElementById('reveal-all-btn').addEventListener('click', () => {
+            const allRevealed = document.querySelectorAll('.answer-masked.revealed').length === document.querySelectorAll('.answer-masked').length;
+            revealAllAnswers(!allRevealed);
+        });
+
+        // 输入框
+        const input = document.getElementById('answer-input');
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                if (document.getElementById('submit-btn').style.display !== 'none') {
+                    checkAnswer();
+                } else {
+                    nextQuestion();
+                }
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                nextQuestion();
+            }
+        });
+
+        // 按钮
+        document.getElementById('submit-btn').addEventListener('click', checkAnswer);
+        document.getElementById('next-btn').addEventListener('click', nextQuestion);
+        document.getElementById('show-answer-btn').addEventListener('click', showAnswer);
+        document.getElementById('skip-btn').addEventListener('click', skipQuestion);
+
+        // 错误类型选择按钮
+        document.querySelectorAll('.error-type-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.error-type-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                // 更新错题本中的错误类型
+                if (currentErrorIndex >= 0 && currentErrorIndex < state.errors.length) {
+                    state.errors[currentErrorIndex].errorType = btn.dataset.type;
+                    saveState();
+                    renderErrorBook();
+                }
+            });
+        });
+    }
+
+    function getRandomPoem() {
+        if (filteredPoems.length === 0) return null;
+        return filteredPoems[Math.floor(Math.random() * filteredPoems.length)];
+    }
+
+    function getSequentialPoem() {
+        if (filteredPoems.length === 0) return null;
+        const poem = filteredPoems[sequentialIndex % filteredPoems.length];
+        sequentialIndex++;
+        return poem;
+    }
+
+    function getErrorPoem() {
+        if (state.errors.length === 0) return null;
+        const errorIndex = Math.floor(Math.random() * state.errors.length);
+        const error = state.errors[errorIndex];
+        const poem = POEMS_DATA.find(p => p.title === error.poemTitle && p.author === error.poemAuthor);
+        return { poem, error };
+    }
+
+    function nextQuestion() {
+        // 随机选择题型
+        questionType = Math.random() < 0.5 ? 'forward' : 'backward';
+
+        let poem;
+        let currentError = null;
+        if (currentMode === 'random') {
+            poem = getRandomPoem();
+        } else if (currentMode === 'sequential') {
+            poem = getSequentialPoem();
+        } else {
+            const result = getErrorPoem();
+            if (!result) {
+                document.getElementById('question').innerHTML = '<span class="hint">错题本为空，换个模式吧</span>';
+                return;
+            }
+            poem = result.poem;
+            currentError = result.error;
+            // 使用错误记录的题型
+            questionType = currentError.questionType;
+        }
+
+        if (!poem) {
+            document.getElementById('question').innerHTML = '<span class="hint">没有匹配的诗词</span>';
+            return;
+        }
+
+        currentPoem = poem;
+        const lines = poem.lines;
+
+        // 选择要考的句子
+        let contextLine, answerLine;
+        if (currentMode === 'errors' && currentError) {
+            // 错题复习模式：使用错误记录中的信息
+            answerLine = currentError.line;
+            contextLine = currentError.context || '';
+            // 找到答案在原文中的位置
+            currentLineIndex = lines.indexOf(answerLine);
+        } else {
+            // 随机/顺序模式：随机选择
+            if (questionType === 'forward') {
+                currentLineIndex = Math.floor(Math.random() * (lines.length - 1));
+                contextLine = lines[currentLineIndex];
+                answerLine = lines[currentLineIndex + 1];
+            } else {
+                currentLineIndex = Math.floor(Math.random() * (lines.length - 1)) + 1;
+                contextLine = lines[currentLineIndex];
+                answerLine = lines[currentLineIndex - 1];
+            }
+        }
+
+        // 显示题目
+        const poemInfo = document.getElementById('poem-info');
+        poemInfo.innerHTML = `<span>${poem.author}</span><span>《${poem.title}》</span><span>${poem.type}</span><button class="view-raw-modal" onclick="openPoemModal(${POEMS_DATA.indexOf(poem)})">查看全文</button>`;
+
+        const questionEl = document.getElementById('question');
+
+        if (questionType === 'forward') {
+            questionEl.innerHTML = `
+                <div>
+                    <div style="margin-bottom: 10px;">${contextLine}</div>
+                    <div class="hint">请写出下一句：</div>
+                </div>
+            `;
+        } else {
+            questionEl.innerHTML = `
+                <div>
+                    <div style="margin-bottom: 10px;">${contextLine}</div>
+                    <div class="hint">请写出上一句：</div>
+                </div>
+            `;
+        }
+        // 答案是目标句
+        currentPoem._answer = answerLine;
+
+        // 重置UI
+        const input = document.getElementById('answer-input');
+        input.value = '';
+        input.className = '';
+        input.disabled = false;
+        input.focus();
+
+        document.getElementById('feedback').className = 'feedback';
+        document.getElementById('feedback').innerHTML = '';
+        document.getElementById('submit-btn').style.display = 'inline-block';
+        document.getElementById('skip-btn').style.display = 'inline-block';
+        document.getElementById('next-btn').style.display = 'none';
+        document.getElementById('show-answer-btn').style.display = 'none';
+        document.getElementById('error-type-select').classList.remove('show');
+        document.querySelectorAll('.error-type-btn').forEach(b => b.classList.remove('selected'));
+        currentErrorIndex = -1;
+        markedChars = [];
+
+        // 错题复习模式：显示"显示答案"按钮
+        if (currentMode === 'errors') {
+            document.getElementById('submit-btn').style.display = 'none';
+            document.getElementById('show-answer-btn').style.display = 'inline-block';
+        }
+    }
+
+    function normalizeText(text) {
+        // 去除标点、空格、全半角转换
+        return text
+            .replace(/[，。！？、；：""''（）《》【】\s]/g, '')
+            .replace(/,/g, '')
+            .replace(/\./g, '')
+            .toLowerCase();
+    }
+
+    function showAnswer() {
+        const feedback = document.getElementById('feedback');
+        feedback.className = 'feedback wrong show';
+        feedback.innerHTML = `<div class="correct-answer">正确答案：${currentPoem._answer}</div>`;
+        document.getElementById('show-answer-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    function revealAnswer(el) {
+        const markedChars = el.dataset.marked;
+        const markedDiv = el.parentElement.parentElement.querySelector('.marked-chars');
+        if (el.classList.contains('revealed')) {
+            el.textContent = '？？？';
+            el.classList.remove('revealed');
+            if (markedDiv) markedDiv.style.display = 'none';
+        } else {
+            el.textContent = el.dataset.answer;
+            el.classList.add('revealed');
+            if (markedDiv && markedChars && markedChars.length > 0) {
+                markedDiv.style.display = 'block';
+            }
+        }
+    }
+
+    function revealAllAnswers(show) {
+        document.querySelectorAll('.answer-masked').forEach(el => {
+            const markedChars = el.dataset.marked;
+            const markedDiv = el.parentElement.parentElement.querySelector('.marked-chars');
+            if (show) {
+                el.textContent = el.dataset.answer;
+                el.classList.add('revealed');
+                if (markedDiv && markedChars && markedChars.length > 0) {
+                    markedDiv.style.display = 'block';
+                }
+            } else {
+                el.textContent = '？？？';
+                el.classList.remove('revealed');
+                if (markedDiv) markedDiv.style.display = 'none';
+            }
+        });
+        document.getElementById('reveal-all-btn').textContent = show ? '一键隐藏全部答案' : '一键显示全部答案';
+    }
+
+    function skipQuestion() {
+        // 把答案填入输入框
+        const input = document.getElementById('answer-input');
+        input.value = currentPoem._answer;
+        input.style.color = '#999';
+        // 禁用输入和按钮
+        input.disabled = true;
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('skip-btn').style.display = 'none';
+        // 2秒后跳到下一题
+        setTimeout(() => {
+            input.style.color = '';
+            nextQuestion();
+        }, 2000);
+    }
+
+    function openPoemModal(idx) {
+        const p = POEMS_DATA[idx];
+        // 按句号、问号、感叹号、分号断句，逗号不断
+        const formattedText = p.raw.replace(/([。！？；])/g, '$1\n').replace(/\n+/g, '\n').trim();
+        document.getElementById('modal-title').textContent = '《' + p.title + '》';
+        document.getElementById('modal-author').textContent = p.author;
+        document.getElementById('modal-text').textContent = formattedText;
+        document.getElementById('poem-modal').classList.add('show');
+    }
+
+    function closePoemModal() {
+        document.getElementById('poem-modal').classList.remove('show');
+    }
+
+    // 点击遮罩关闭
+    document.getElementById('poem-modal').addEventListener('click', function(e) {
+        if (e.target === this) closePoemModal();
+    });
+
+    let markedChars = [];
+    function toggleCharMark(el) {
+        const ch = el.dataset.char;
+        el.classList.toggle('marked');
+        if (el.classList.contains('marked')) {
+            if (!markedChars.includes(ch)) markedChars.push(ch);
+        } else {
+            markedChars = markedChars.filter(c => c !== ch);
+        }
+        // 更新标记生字信息
+        const info = document.getElementById('marked-info');
+        if (markedChars.length > 0) {
+            info.innerHTML = `标记的生字：<span>${markedChars.join('、')}</span>`;
+        } else {
+            info.innerHTML = '点击上方红字可标记生字';
+        }
+        // 保存到错题记录
+        if (currentErrorIndex >= 0 && currentErrorIndex < state.errors.length) {
+            state.errors[currentErrorIndex].markedChars = [...markedChars];
+            saveState();
+        }
+    }
+
+    function checkAnswer() {
+        const input = document.getElementById('answer-input');
+        const userAnswer = input.value.trim();
+        const correctAnswer = currentPoem._answer;
+
+        if (!userAnswer) {
+            input.focus();
+            return;
+        }
+
+        const isCorrect = normalizeText(userAnswer) === normalizeText(correctAnswer);
+
+        const feedback = document.getElementById('feedback');
+        const poemState = getPoemState(currentPoem.title + currentPoem.author);
+
+        if (isCorrect) {
+            input.className = 'correct';
+            feedback.className = 'feedback correct show';
+            feedback.innerHTML = '<strong>正确！</strong>';
+            state.totalCorrect++;
+            poemState.correct++;
+
+            // 连续答对3次标记为掌握
+            if (poemState.correct >= 3 && poemState.correct > poemState.wrong * 2) {
+                poemState.mastered = true;
+            }
+
+            // 从错题本移除
+            state.errors = state.errors.filter(e =>
+                !(e.poemTitle === currentPoem.title && e.poemAuthor === currentPoem.author && e.line === correctAnswer)
+            );
+        } else {
+            input.className = 'wrong';
+            // 将答案每个字包装成可点击的span
+            const chars = correctAnswer.split('').map(ch =>
+                `<span class="char-mark" onclick="toggleCharMark(this)" data-char="${ch}">${ch}</span>`
+            ).join('');
+            feedback.className = 'feedback wrong show';
+            feedback.innerHTML = `<strong>错误！</strong><div class="correct-answer">正确答案：<span id="answer-chars">${chars}</span></div><div class="marked-chars" id="marked-info">点击上方红字可标记生字</div>`;
+            state.totalWrong++;
+            poemState.wrong++;
+            poemState.mastered = false;
+
+            // 加入错题本
+            const exists = state.errors.some(e =>
+                e.poemTitle === currentPoem.title && e.poemAuthor === currentPoem.author && e.line === correctAnswer
+            );
+            if (!exists) {
+                // 获取上下文
+                const lines = currentPoem.lines;
+                let context = '';
+                if (questionType === 'forward') {
+                    // 给上句写下句：提示句是上一句
+                    context = lines[currentLineIndex - 1] || '';
+                } else {
+                    // 给下句写上句：提示句是下一句
+                    context = lines[currentLineIndex + 1] || '';
+                }
+                state.errors.push({
+                    poemTitle: currentPoem.title,
+                    poemAuthor: currentPoem.author,
+                    line: correctAnswer,
+                    context: context,
+                    questionType: questionType,
+                    errorType: ''
+                });
+            }
+            // 找到当前错误的索引
+            currentErrorIndex = state.errors.findIndex(e =>
+                e.poemTitle === currentPoem.title && e.poemAuthor === currentPoem.author && e.line === correctAnswer
+            );
+            // 显示错误类型选择
+            document.getElementById('error-type-select').classList.add('show');
+        }
+
+        saveState();
+        updateStats();
+        renderPoemList();
+        renderErrorBook();
+
+        input.disabled = true;
+        document.getElementById('submit-btn').style.display = 'none';
+        document.getElementById('next-btn').style.display = 'inline-block';
+    }
+
+    function renderPoemList() {
+        const list = document.getElementById('poem-list');
+        list.innerHTML = POEMS_DATA.map((p, idx) => {
+            const ps = getPoemState(p.title + p.author);
+            let statusClass = 'new';
+            if (ps.mastered) statusClass = 'mastered';
+            else if (ps.correct > 0 || ps.wrong > 0) statusClass = 'learning';
+
+            return `
+                <div class="poem-item" style="flex-direction: column; align-items: flex-start;">
+                    <div style="display: flex; width: 100%; align-items: center;">
+                        <div class="status ${statusClass}"></div>
+                        <div class="info">
+                            <div class="title">${p.title}</div>
+                            <div class="author">${p.author} · ${p.type} · ${ps.correct}对/${ps.wrong}错</div>
+                        </div>
+                        <button class="view-raw-btn" onclick="toggleRaw(${idx})">原文</button>
+                    </div>
+                    <div class="poem-raw" id="raw-${idx}">${p.raw}</div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function toggleRaw(idx) {
+        const el = document.getElementById('raw-' + idx);
+        el.classList.toggle('show');
+    }
+
+    function renderErrorBook() {
+        const book = document.getElementById('error-book');
+        const filterType = document.getElementById('filter-error-type')?.value || 'all';
+
+        let errors = state.errors;
+        if (filterType !== 'all') {
+            if (filterType === 'unmarked') {
+                errors = errors.filter(e => !e.errorType);
+            } else {
+                errors = errors.filter(e => e.errorType === filterType);
+            }
+        }
+
+        if (errors.length === 0) {
+            book.innerHTML = '<div class="empty-state">暂无错题，继续加油！</div>';
+            return;
+        }
+
+        const errorTypeLabels = {
+            'forgot': '不记得',
+            'typo': '字写错',
+            'cantwrite': '不会写'
+        };
+
+        book.innerHTML = errors.map((error, index) => {
+            const typeTag = error.errorType ?
+                `<span class="error-type-tag ${error.errorType}">${errorTypeLabels[error.errorType] || ''}</span>` : '';
+            // 标记的生字（默认隐藏，显示答案后才出现）
+            let markedClass = error.markedChars && error.markedChars.length > 0 ? '' : 'style="display:none;"';
+            let markedText = error.markedChars && error.markedChars.length > 0 ? error.markedChars.join('、') : '';
+            // 显示完整上下文，答案默认隐藏
+            let lineDisplay = '';
+            if (error.context) {
+                if (error.questionType === 'forward') {
+                    lineDisplay = `<div class="line-context"><span class="context">${error.context}</span> <span class="arrow">→</span> <span class="answer-masked" onclick="revealAnswer(this)" data-answer="${error.line}" data-marked="${markedText}">？？？</span></div>`;
+                } else {
+                    lineDisplay = `<div class="line-context"><span class="answer-masked" onclick="revealAnswer(this)" data-answer="${error.line}" data-marked="${markedText}">？？？</span> <span class="arrow">←</span> <span class="context">${error.context}</span></div>`;
+                }
+            } else {
+                lineDisplay = `<div class="line"><span class="answer-masked" onclick="revealAnswer(this)" data-answer="${error.line}" data-marked="${markedText}">？？？</span></div>`;
+            }
+            return `
+                <div class="error-item">
+                    <div>
+                        <div class="poem-title">${error.poemAuthor}《${error.poemTitle}》${typeTag}</div>
+                        ${lineDisplay}
+                        <div class="marked-chars" ${markedClass}>生字：<span>${markedText}</span></div>
+                    </div>
+                    <button class="btn btn-danger btn-small" onclick="removeError(${index})">移除</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function removeError(filteredIndex) {
+        const filterType = document.getElementById('filter-error-type')?.value || 'all';
+        let errors = state.errors;
+        if (filterType !== 'all') {
+            if (filterType === 'unmarked') {
+                errors = errors.filter(e => !e.errorType);
+            } else {
+                errors = errors.filter(e => e.errorType === filterType);
+            }
+        }
+        const error = errors[filteredIndex];
+        const actualIndex = state.errors.indexOf(error);
+        if (actualIndex > -1) {
+            state.errors.splice(actualIndex, 1);
+            saveState();
+            updateStats();
+            renderErrorBook();
+        }
+    }
+
+    // 启动
+    init();
+    </script>
+</body>
+</html>
