@@ -140,6 +140,7 @@
         .poems-content .poem-full-title { font-size: 1.5em; font-weight: 600; color: #333; margin-bottom: 8px; letter-spacing: 2px; }
         .poems-content .poem-full-author { color: #888; margin-bottom: 28px; font-size: 0.95em; }
         .poems-content .poem-full-text { line-height: 2.4; color: #333; white-space: pre-wrap; font-size: 1.15em; letter-spacing: 2px; }
+        .search-highlight { background: #fff176; padding: 1px 2px; border-radius: 2px; }
         body.dark-mode .poems-sidebar { border-color: #3a3a5a; }
         body.dark-mode .poems-sidebar .sidebar-title { color: #e8e8f0; border-color: #3a3a5a; }
         body.dark-mode .poems-sidebar .sidebar-item { color: #b0b0c0; }
@@ -420,7 +421,12 @@
             </div>
 
             <div id="tab-poems" class="tab-content" style="display:none;">
-                <input type="text" id="poem-search" placeholder="搜索诗词..." style="width:100%;padding:12px 16px;border:1px solid #ddd;border-radius:8px;margin-bottom:16px;font-size:1.05em;">
+                <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;">
+                    <input type="text" id="poem-search" placeholder="搜索诗词..." style="flex:1;padding:12px 16px;border:1px solid #ddd;border-radius:8px;font-size:1.05em;">
+                    <button class="btn btn-secondary" onclick="searchInContent('prev')" style="padding:10px 16px;">上一处</button>
+                    <button class="btn btn-secondary" onclick="searchInContent('next')" style="padding:10px 16px;">下一处</button>
+                    <span id="search-count" style="color:#999;font-size:0.9em;"></span>
+                </div>
                 <div class="poems-view">
                     <div class="poems-sidebar">
                         <div id="poems-sidebar-list"></div>
@@ -788,12 +794,81 @@
             <div class="poem-full">
                 <div class="poem-full-title">《${p.title}》</div>
                 <div class="poem-full-author">${p.author}</div>
-                <div class="poem-full-text">${formattedText}</div>
+                <div class="poem-full-text" id="poem-full-text">${formattedText}</div>
             </div>
         `;
         // 高亮当前选中
         document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
         document.querySelector(`.sidebar-item[data-idx="${idx}"]`).classList.add('active');
+        // 如果有搜索词，高亮匹配内容
+        highlightSearch();
+    }
+
+    let searchMatches = [];
+    let searchIndex = 0;
+
+    function highlightSearch() {
+        const searchText = document.getElementById('poem-search').value.trim();
+        const textEl = document.getElementById('poem-full-text');
+        if (!textEl || !searchText) {
+            document.getElementById('search-count').textContent = '';
+            return;
+        }
+
+        // 获取原文
+        const p = POEMS_DATA.find(el => el.title === document.querySelector('.poem-full-title').textContent.replace(/[《》]/g, ''));
+        if (!p) return;
+
+        const rawText = p.raw;
+        searchMatches = [];
+        let idx = 0;
+        const searchLower = searchText.toLowerCase();
+        const rawLower = rawText.toLowerCase();
+
+        while ((idx = rawLower.indexOf(searchLower, idx)) !== -1) {
+            searchMatches.push(idx);
+            idx += 1;
+        }
+
+        if (searchMatches.length > 0) {
+            document.getElementById('search-count').textContent = `共 ${searchMatches.length} 处`;
+            // 高亮所有匹配
+            let html = rawText;
+            let offset = 0;
+            searchMatches.forEach((pos, i) => {
+                const match = rawText.substring(pos, pos + searchText.length);
+                const highlight = `<span class="search-highlight" id="match-${i}">${match}</span>`;
+                html = html.substring(0, pos + offset) + highlight + html.substring(pos + offset + searchText.length);
+                offset += highlight.length - match.length;
+            });
+            textEl.innerHTML = html.replace(/([，。！？；])/g, '$1\n');
+            // 滚动到第一个匹配
+            scrollToMatch(0);
+        } else {
+            document.getElementById('search-count').textContent = '无匹配';
+            textEl.innerHTML = rawText.replace(/([，。！？；])/g, '$1\n');
+        }
+    }
+
+    function searchInContent(direction) {
+        if (searchMatches.length === 0) return;
+        if (direction === 'next') {
+            searchIndex = (searchIndex + 1) % searchMatches.length;
+        } else {
+            searchIndex = (searchIndex - 1 + searchMatches.length) % searchMatches.length;
+        }
+        scrollToMatch(searchIndex);
+        document.getElementById('search-count').textContent = `${searchIndex + 1} / ${searchMatches.length}`;
+    }
+
+    function scrollToMatch(index) {
+        const el = document.getElementById('match-' + index);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // 闪烁效果
+            el.style.background = '#ffeb3b';
+            setTimeout(() => { el.style.background = '#fff176'; }, 300);
+        }
     }
 
     function updateFilters() {
@@ -914,6 +989,7 @@
         // 诗词搜索
         document.getElementById('poem-search').addEventListener('input', (e) => {
             renderPoemSidebar(e.target.value);
+            highlightSearch();
         });
     }
 
