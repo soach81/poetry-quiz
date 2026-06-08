@@ -855,14 +855,22 @@
         if (!result) return;
         showPoem(result.poemIdx);
         document.getElementById('search-count').textContent = `${index + 1} / ${searchResults.length}`;
-        // 滚动目录到当前项
-        const sidebarItem = document.querySelector(`.sidebar-item[data-idx="${result.poemIdx}"]`);
-        if (sidebarItem) sidebarItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        // 滚动内容到第一个高亮位置
+
+        // 滚动左侧目录到当前项
+        setTimeout(() => {
+            const sidebarItem = document.querySelector(`.sidebar-item[data-idx="${result.poemIdx}"]`);
+            if (sidebarItem) {
+                sidebarItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                sidebarItem.style.background = '#e8f0fe';
+                setTimeout(() => { sidebarItem.style.background = ''; }, 1500);
+            }
+        }, 50);
+
+        // 滚动右侧内容到高亮位置
         setTimeout(() => {
             const highlight = document.querySelector('.search-highlight');
             if (highlight) highlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 100);
+        }, 150);
     }
 
     function highlightCurrentPoem() {
