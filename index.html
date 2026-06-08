@@ -785,7 +785,6 @@
     function showPoem(idx) {
         const p = POEMS_DATA[idx];
         const content = document.getElementById('poems-content');
-        // 按所有标点断句：逗号、句号、问号、感叹号、分号后换行
         const formattedText = p.raw
             .replace(/([，。！？；])/g, '$1\n')
             .replace(/\n+/g, '\n')
@@ -797,78 +796,86 @@
                 <div class="poem-full-text" id="poem-full-text">${formattedText}</div>
             </div>
         `;
-        // 高亮当前选中
         document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
-        document.querySelector(`.sidebar-item[data-idx="${idx}"]`).classList.add('active');
-        // 如果有搜索词，高亮匹配内容
-        highlightSearch();
+        const sidebarItem = document.querySelector(`.sidebar-item[data-idx="${idx}"]`);
+        if (sidebarItem) sidebarItem.classList.add('active');
+        highlightCurrentPoem();
     }
 
-    let searchMatches = [];
-    let searchIndex = 0;
+    // 跨篇目搜索结果：{poemIdx, poem}
+    let searchResults = [];
+    let searchResultIndex = 0;
+    let searchKeyword = '';
 
-    function highlightSearch() {
-        const searchText = document.getElementById('poem-search').value.trim();
-        const textEl = document.getElementById('poem-full-text');
-        if (!textEl || !searchText) {
+    function doSearch() {
+        searchKeyword = document.getElementById('poem-search').value.trim().toLowerCase();
+        searchResults = [];
+        searchResultIndex = 0;
+
+        if (!searchKeyword) {
             document.getElementById('search-count').textContent = '';
+            renderPoemSidebar('');
             return;
         }
 
-        // 获取原文
-        const p = POEMS_DATA.find(el => el.title === document.querySelector('.poem-full-title').textContent.replace(/[《》]/g, ''));
-        if (!p) return;
+        // 搜索所有诗词
+        POEMS_DATA.forEach((p, idx) => {
+            if (p.raw.toLowerCase().includes(searchKeyword) ||
+                p.author.toLowerCase().includes(searchKeyword) ||
+                p.title.toLowerCase().includes(searchKeyword)) {
+                searchResults.push({ poemIdx: idx, poem: p });
+            }
+        });
 
-        const rawText = p.raw;
-        searchMatches = [];
-        let idx = 0;
-        const searchLower = searchText.toLowerCase();
-        const rawLower = rawText.toLowerCase();
+        document.getElementById('search-count').textContent = searchResults.length > 0
+            ? `找到 ${searchResults.length} 首`
+            : '无匹配';
 
-        while ((idx = rawLower.indexOf(searchLower, idx)) !== -1) {
-            searchMatches.push(idx);
-            idx += 1;
-        }
+        // 过滤目录
+        renderPoemSidebar(document.getElementById('poem-search').value);
 
-        if (searchMatches.length > 0) {
-            document.getElementById('search-count').textContent = `共 ${searchMatches.length} 处`;
-            // 高亮所有匹配
-            let html = rawText;
-            let offset = 0;
-            searchMatches.forEach((pos, i) => {
-                const match = rawText.substring(pos, pos + searchText.length);
-                const highlight = `<span class="search-highlight" id="match-${i}">${match}</span>`;
-                html = html.substring(0, pos + offset) + highlight + html.substring(pos + offset + searchText.length);
-                offset += highlight.length - match.length;
-            });
-            textEl.innerHTML = html.replace(/([，。！？；])/g, '$1\n');
-            // 滚动到第一个匹配
-            scrollToMatch(0);
-        } else {
-            document.getElementById('search-count').textContent = '无匹配';
-            textEl.innerHTML = rawText.replace(/([，。！？；])/g, '$1\n');
+        // 跳到第一首
+        if (searchResults.length > 0) {
+            jumpToSearchResult(0);
         }
     }
 
     function searchInContent(direction) {
-        if (searchMatches.length === 0) return;
+        if (searchResults.length === 0) return;
         if (direction === 'next') {
-            searchIndex = (searchIndex + 1) % searchMatches.length;
+            searchResultIndex = (searchResultIndex + 1) % searchResults.length;
         } else {
-            searchIndex = (searchIndex - 1 + searchMatches.length) % searchMatches.length;
+            searchResultIndex = (searchResultIndex - 1 + searchResults.length) % searchResults.length;
         }
-        scrollToMatch(searchIndex);
-        document.getElementById('search-count').textContent = `${searchIndex + 1} / ${searchMatches.length}`;
+        jumpToSearchResult(searchResultIndex);
     }
 
-    function scrollToMatch(index) {
-        const el = document.getElementById('match-' + index);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // 闪烁效果
-            el.style.background = '#ffeb3b';
-            setTimeout(() => { el.style.background = '#fff176'; }, 300);
+    function jumpToSearchResult(index) {
+        const result = searchResults[index];
+        if (!result) return;
+        showPoem(result.poemIdx);
+        document.getElementById('search-count').textContent = `${index + 1} / ${searchResults.length}`;
+    }
+
+    function highlightCurrentPoem() {
+        const textEl = document.getElementById('poem-full-text');
+        if (!textEl || !searchKeyword) return;
+
+        const rawText = textEl.textContent;
+        const rawLower = rawText.toLowerCase();
+        const kwLower = searchKeyword;
+        let html = '';
+        let lastIdx = 0;
+        let idx;
+
+        while ((idx = rawLower.indexOf(kwLower, lastIdx)) !== -1) {
+            html += rawText.substring(lastIdx, idx);
+            html += `<span class="search-highlight">${rawText.substring(idx, idx + searchKeyword.length)}</span>`;
+            lastIdx = idx + searchKeyword.length;
         }
+        html += rawText.substring(lastIdx);
+
+        textEl.innerHTML = html.replace(/([，。！？；])/g, '$1\n');
     }
 
     function updateFilters() {
@@ -987,10 +994,7 @@
         });
 
         // 诗词搜索
-        document.getElementById('poem-search').addEventListener('input', (e) => {
-            renderPoemSidebar(e.target.value);
-            highlightSearch();
-        });
+        document.getElementById('poem-search').addEventListener('input', doSearch);
     }
 
     function getRandomPoem() {
