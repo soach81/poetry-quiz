@@ -768,6 +768,12 @@
         }
 
         sidebar.innerHTML = html;
+
+        // 搜索到结果后自动跳到第一首
+        if (filter && filteredPoems.length + filteredCipai.length > 0) {
+            const firstMatch = filteredPoems.length > 0 ? filteredPoems[0] : filteredCipai[0];
+            showPoem(POEMS_DATA.indexOf(firstMatch));
+        }
     }
 
     function showPoem(idx) {
