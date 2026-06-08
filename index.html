@@ -858,6 +858,11 @@
         // 滚动目录到当前项
         const sidebarItem = document.querySelector(`.sidebar-item[data-idx="${result.poemIdx}"]`);
         if (sidebarItem) sidebarItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        // 滚动内容到第一个高亮位置
+        setTimeout(() => {
+            const highlight = document.querySelector('.search-highlight');
+            if (highlight) highlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
     }
 
     function highlightCurrentPoem() {
