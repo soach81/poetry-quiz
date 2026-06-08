@@ -422,7 +422,7 @@
             <div id="tab-poems" class="tab-content" style="display:none;">
                 <div class="poems-view">
                     <div class="poems-sidebar">
-                        <input type="text" id="poem-search" placeholder="搜索诗词..." style="width:100%;padding:8px 12px;border:1px solid #ddd;border-radius:6px;margin-bottom:12px;font-size:0.9em;">
+                        <input type="text" id="poem-search" placeholder="输入作者、标题或诗句搜索..." style="width:100%;padding:14px 16px;border:2px solid #667eea;border-radius:10px;margin-bottom:16px;font-size:1.1em;background:#f8f9ff;">
                         <div id="poems-sidebar-list"></div>
                     </div>
                     <div class="poems-content" id="poems-content">
@@ -729,19 +729,18 @@
 
     function renderPoemSidebar(filter = '') {
         const sidebar = document.getElementById('poems-sidebar-list');
-        const filterLower = filter.toLowerCase();
+        const filterLower = filter.toLowerCase().trim();
 
         let html = '';
-        // 先按类型分组
         const poems = POEMS_DATA.filter(p => p.type === '诗');
         const cipai = POEMS_DATA.filter(p => p.type === '词');
 
-        // 过滤函数
+        // 过滤函数：支持多关键词，每个词都要匹配
         function matchesFilter(p) {
             if (!filterLower) return true;
-            return p.author.toLowerCase().includes(filterLower) ||
-                   p.title.toLowerCase().includes(filterLower) ||
-                   p.raw.toLowerCase().includes(filterLower);
+            const keywords = filterLower.split(/\s+/);
+            const searchText = (p.author + p.title + p.raw).toLowerCase();
+            return keywords.every(kw => searchText.includes(kw));
         }
 
         const filteredPoems = poems.filter(matchesFilter);
